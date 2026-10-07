@@ -460,12 +460,24 @@ body:has(dialog[open]) { overflow: hidden; }
 .text-button { padding: var(--s-8) var(--s-5); color: var(--ink-muted); }
 .text-button:hover { color: var(--ink-strong); }
 
-.modal-done { display: grid; gap: var(--s-34); padding-top: var(--s-34); }
-.modal-done p { font: 400 26px/34px var(--serif); color: var(--ink-strong); }
+.modal-panel { transition: transform 260ms ease, height 260ms ease; }
+.modal-panel.is-done .modal-close { display: none; } /* la confirmación tiene una sola salida: Cerrar */
+
+.modal-done { display: grid; gap: var(--s-13); animation: done-in 260ms ease both; }
+.done-title { font: 400 42px/55px var(--serif); color: var(--ink-strong); overflow-wrap: anywhere; }
+.done-sub { color: var(--ink); overflow-wrap: anywhere; }
+.done-email { color: var(--ink-strong); }
+.modal-done .modal-actions { margin-top: var(--s-21); }
+@keyframes done-in {
+  from { opacity: 0; transform: translateY(var(--s-8)); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .modal-done { animation: none; } }
 
 @media (max-width: 720px) {
   .modal-panel { padding: var(--s-21); }
   .field input.field-email { font-size: 26px; }
+  .done-title { font-size: 26px; line-height: 34px; }
 }
 
 .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }

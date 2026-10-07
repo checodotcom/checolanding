@@ -74,11 +74,15 @@ const PLACEHOLDER = "[tu correo]";
     </form>
 
     <div class="modal-done" id="lead-done" hidden>
-      <p>Listo. Te escribo pronto.</p>
+      <p class="label">Mensaje enviado</p>
+      <p class="done-title">Listo, <span id="lead-done-name"></span>.</p>
+      <p class="done-sub">Te respondo a <span class="done-email" id="lead-done-email"></span> lo antes posible.</p>
       <div class="modal-actions">
-        <button class="send" type="button" data-close>Cerrar</button>
+        <button class="send" type="button" id="lead-done-close">Ver portafolio</button>
       </div>
     </div>
+    <!-- Anuncio para lectores de pantalla: la confirmación visual aparece al ocultar el formulario. -->
+    <p class="sr-only" id="lead-live" aria-live="polite"></p>
   </div>
 </dialog>
 
@@ -119,10 +123,32 @@ const PLACEHOLDER = "[tu correo]";
   const dStatus = document.getElementById("lead-status")!;
   const dCount = document.getElementById("lead-count")!;
   const dDone = document.getElementById("lead-done")!;
+  const panel = dialog.querySelector<HTMLElement>(".modal-panel")!;
   let sent = false;
+
+  function showDone(name: string, email: string) {
+    const from = panel.offsetHeight;
+    document.getElementById("lead-done-name")!.textContent = name.split(/\s+/)[0];
+    document.getElementById("lead-done-email")!.textContent = email;
+    document.getElementById("lead-live")!.textContent = `Mensaje enviado. Te respondo a ${email} lo antes posible.`;
+    dForm.hidden = true;
+    dDone.hidden = false;
+    panel.classList.add("is-done");
+    document.getElementById("lead-done-close")!.focus(); // el botón de envío desaparece: el foco no se pierde
+    if (reduceMotion.matches) return;
+    // El panel crece o se encoge con suavidad en lugar de saltar de tamaño.
+    panel.style.height = "auto";
+    const to = panel.offsetHeight;
+    panel.style.height = `${from}px`;
+    void panel.offsetHeight;
+    panel.style.height = `${to}px`;
+    setTimeout(() => (panel.style.height = ""), 300);
+  }
 
   function openDialog() {
     dEmail.value = input.value.trim();
+    panel.classList.remove("is-done");
+    panel.style.height = "";
     dForm.hidden = false;
     dDone.hidden = true;
     dStatus.textContent = "";
@@ -131,11 +157,12 @@ const PLACEHOLDER = "[tu correo]";
     (dName.value ? dMessage : dName).focus();
   }
 
-  function closeDialog() {
+  function closeDialog(afterClose?: () => void) {
     if (!dialog.open) return;
     dialog.classList.remove("is-open");
     const finish = () => {
       dialog.close();
+      afterClose?.();
       if (sent) {
         // Tras un envío exitoso se limpia todo para no dejar el correo a la vista.
         sent = false;
@@ -168,7 +195,14 @@ const PLACEHOLDER = "[tu correo]";
     // El clic en el fondo cae sobre el <dialog> mismo, no sobre el panel.
     if (e.target === dialog) closeDialog();
   });
-  dialog.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("click", closeDialog));
+  dialog.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("click", () => closeDialog()));
+
+  // Tras el envío, el único botón cierra el diálogo y lleva al portafolio.
+  document.getElementById("lead-done-close")!.addEventListener("click", () =>
+    closeDialog(() =>
+      document.getElementById("portafolio")?.scrollIntoView({ behavior: reduceMotion.matches ? "auto" : "smooth" }),
+    ),
+  );
 
   dMessage.addEventListener("input", () => (dCount.textContent = String(dMessage.value.length)));
 
@@ -200,8 +234,7 @@ const PLACEHOLDER = "[tu correo]";
       });
       if (!res.ok) throw new Error(String(res.status));
       sent = true;
-      dForm.hidden = true;
-      dDone.hidden = false;
+      showDone(dName.value.trim(), dEmail.value.trim());
     } catch {
       dStatus.textContent = "No se pudo enviar. Intenta de nuevo.";
     } finally {
