@@ -344,6 +344,23 @@ a.project:hover .name { text-decoration: underline; text-underline-offset: 3px; 
 .send:hover:not(:disabled) { color: var(--ink-strong); }
 .send:disabled { cursor: default; }
 .send[hidden] { display: none; }
+
+/* Continuar ocupa su sitio aunque aún no se vea: al aparecer no mueve las redes de abajo.
+   visibility:hidden lo saca del teclado y de los lectores de pantalla, igual que `hidden`. */
+.lead .send[hidden] { display: inline-block; visibility: hidden; }
+
+/* En pantallas anchas el botón nunca baja de línea: un correo largo se desplaza dentro del
+   campo en vez de empujar el botón (y todo lo de abajo) hacia otra fila. */
+@media (min-width: 721px) {
+  .lead { flex-wrap: nowrap; }
+  .email-field { min-width: 0; }
+}
+
+/* En estrecho el botón siempre tiene su propia fila (reservada aunque esté oculto): así no
+   depende de cuánto mida el correo para saltar de línea. */
+@media (max-width: 720px) {
+  .lead { flex-direction: column; align-items: flex-start; }
+}
 .send.is-in { animation: send-in 260ms ease both; }
 
 @keyframes send-in {
