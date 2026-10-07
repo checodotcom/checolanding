@@ -15,6 +15,15 @@
   // Sin destination_address a propósito: así el correo de destino no queda en el repo.
   // MAIL_TO se define como secreto en Cloudflare (Settings → Variables and Secrets).
   "send_email": [{ "name": "CONTACT_EMAIL" }],
+  // Lista de contactos del formulario (el ID de la base no es un secreto).
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "checodotcom-contactos",
+      "database_id": "61b351d9-b3a9-4ba5-9c0a-adf0b147d3c9",
+      "migrations_dir": "migrations"
+    }
+  ],
   "vars": {
     "MAIL_FROM": "contacto@checodot.com",
     "ALLOWED_ORIGINS": "https://checodot.com"

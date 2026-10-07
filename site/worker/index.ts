@@ -6,6 +6,7 @@ import { createMimeMessage, Mailbox } from "mimetext";
 interface Env {
   ASSETS: { fetch(request: Request): Promise<Response> };
   CONTACT_EMAIL: { send(message: EmailMessage): Promise<void> };
+  DB: { prepare(query: string): { bind(...values: unknown[]): { run(): Promise<unknown> } } };
   MAIL_FROM: string; // remitente en el dominio con Email Routing (var en wrangler.jsonc)
   MAIL_TO: string; // destino verificado en Email Routing (secreto en el panel de Cloudflare)
   ALLOWED_ORIGINS: string; // orígenes permitidos separados por coma
@@ -69,6 +70,20 @@ async function handleContact(request: Request, env: Env): Promise<Response> {
 
   if (!EMAIL.test(email) || name.length < 2) return json({ ok: false }, 400);
 
+  // 1) Guardar primero: así el contacto no se pierde aunque falle el correo.
+  let saved = false;
+  try {
+    await env.DB.prepare("INSERT INTO contactos (nombre, correo, mensaje) VALUES (?1, ?2, ?3)")
+      .bind(name, email, message)
+      .run();
+    saved = true;
+  } catch (err) {
+    const e = err as { name?: string; message?: string };
+    console.error("[contact] no se pudo guardar:", e?.name, e?.message); // sin datos del visitante
+  }
+
+  // 2) Avisar por correo.
+  let sent = false;
   try {
     const mime = createMimeMessage();
     mime.setSender({ name: "checodotcom", addr: env.MAIL_FROM });
@@ -84,12 +99,15 @@ async function handleContact(request: Request, env: Env): Promise<Response> {
       data: toBase64Utf8([`Nombre: ${name}`, `Correo: ${email}`, "", message || "(sin mensaje)"].join("\n")),
     });
     await env.CONTACT_EMAIL.send(new EmailMessage(env.MAIL_FROM, env.MAIL_TO, mime.asRaw()));
+    sent = true;
   } catch (err) {
     // Solo el motivo técnico: nunca el nombre, el correo ni el mensaje del visitante.
     const e = err as { name?: string; code?: string; message?: string };
     console.error("[contact] no se pudo enviar:", e?.name, e?.code, e?.message, "| MAIL_TO definido:", Boolean(env.MAIL_TO));
-    return json({ ok: false }, 502);
   }
+
+  // Error solo si no quedó ningún rastro: ni guardado ni avisado.
+  if (!saved && !sent) return json({ ok: false }, 502);
   return json({ ok: true });
 }
 
