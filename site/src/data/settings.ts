@@ -5,10 +5,15 @@ export interface Settings {
   social: { label: string; url?: string }[];
 }
 
-// Lo que falte en Sanity se muestra como [placeholder] y sin enlace.
+// Redes por defecto: se usan mientras "Ajustes del sitio" no tenga redes publicadas en Sanity.
+// El correo, si falta, se muestra como [placeholder] y sin enlace.
 const fallback: Settings = {
   email: undefined,
-  social: [{ label: "Instagram" }, { label: "GitHub" }, { label: "LinkedIn" }],
+  social: [
+    { label: "Instagram", url: "https://www.instagram.com/sergioherrasti/" },
+    { label: "GitHub", url: "https://github.com/checodotcom" },
+    { label: "LinkedIn", url: "https://www.linkedin.com/in/sergio-herrasti-de-la-garza/" },
+  ],
 };
 
 export async function getSettings(): Promise<Settings> {

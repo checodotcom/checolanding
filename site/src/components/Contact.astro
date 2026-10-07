@@ -19,7 +19,7 @@ const { email, social } = await getSettings();
       <ul class="links">
         {
           social.map((s) => (
-            <li>{s.url ? <a href={s.url} rel="me noopener">{s.label}</a> : <span class="pending">{s.label}</span>}</li>
+            <li>{s.url ? <a href={s.url} target="_blank" rel="me noopener noreferrer">{s.label}</a> : <span class="pending">{s.label}</span>}</li>
           ))
         }
       </ul>

@@ -18,6 +18,9 @@ Sitio personal de Sergio (alias web **checodotcom**): portafolio de diseño web,
 - **Orden de proyectos:** año y mes de conclusión, del más reciente al más antiguo; el desempate es la fecha de creación. Nunca se numeran.
 - **Sitio estático:** lo publicado en Sanity solo aparece tras un rebuild.
 - **Desarrollo:** `npm run dev -- --port 4373` para la landing con recarga en vivo. El Studio **no** carga en dev (error "Outdated Optimize Dep" de Vite); para editar contenido usa `npm run admin` (build + preview en el puerto 4373, que es el origen CORS autorizado).
+- **Hosting:** Cloudflare Pages, desplegado desde GitHub (rama `main`) en `https://checodot.com`. Configuración: raíz `site`, build `npm run build`, salida `dist`, Node 24 (`.node-version`).
+- **Flujo de contenido:** al publicar en Sanity, un webhook (filtro `_type in ["project","siteSettings"]`, solo documentos publicados) llama al deploy hook de Cloudflare y el sitio se reconstruye solo. La URL del deploy hook es secreta: vive solo en Sanity, nunca en el repo.
+- **CORS en Sanity:** cada origen necesita **Allow credentials** o el Studio muestra "Not Allowed". Autorizados: `http://localhost:4373` y `https://checodot.com`. Si se agrega otro dominio, repetirlo ahí.
 - **Dependencia fijada:** `@sanity/ui` debe ir como dependencia directa en `^4`, porque `sanity@6` la necesita y la integración arrastra la 3.
 
 ---
@@ -98,7 +101,7 @@ El texto siempre va en gris, nunca en negro.
 - El alto mínimo es de 860 px. El contenido va pegado abajo (`justify-content: flex-end`).
 - "checodotcom" va abajo a la izquierda, en una línea.
 - El nav (Portafolio, Contacto, Acerca) va apilado a la derecha del wordmark, alineado a su línea base (`align-items: last baseline`), con un gap de 34 px.
-- En móvil el nav baja debajo del wordmark, en una fila a 16 px.
+- En móvil el nav va apilado arriba a la derecha (16/26, a `13px` del borde superior y al margen derecho) y el wordmark queda abajo a la izquierda. El hero mide `100svh` en lugar de 860 px, para que el wordmark no quede cortado bajo el pliegue.
 
 ### Header flotante (aparece con el scroll)
 
@@ -119,7 +122,8 @@ El texto siempre va en gris, nunca en negro.
   - **Orden:** por fecha de conclusión, del más reciente al más antiguo. Se ordena en el código a partir de `year` y `month`; nunca se numeran.
   - Al fondo de la columna va una nota pequeña: "Web · Editorial · Fotografía".
 - **Columnas 2 y 3, media.** Muestran la imagen del proyecto seleccionado, alineada **abajo a la izquierda**. Mide el 61.8 % del ancho, con proporción 1.618 : 1 y mínimo de 280 px. Debajo van el nombre (Baskervville 26) y una descripción (13 px).
-- **Interacción:** al pasar el cursor o hacer clic en una fila, cambia la imagen. La fila activa va en `ink-strong` y las demás en `ink-display`. Cada fila es un `<button>` real con `aria-pressed`.
+- **Interacción:** al pasar el cursor o hacer clic en una fila, cambia la imagen. La fila activa va en `ink-strong` y las demás en `ink-display`, y se marca con `aria-current="true"`.
+  - **Enlaces:** cada proyecto tiene un campo opcional "URL del proyecto" en Sanity. Con URL, la fila es un `<a>` (la fila completa), y la imagen y el nombre bajo la imagen también llevan a esa liga; todos abren en pestaña nueva (`target="_blank"`, `rel="noopener noreferrer"`). El enlace de la imagen duplica el del nombre, por eso va con `tabindex="-1"` y `aria-hidden`. Sin URL, la fila es un `<button>` y no hay enlaces. En táctil (`(hover: none)`), el primer toque en una fila con URL solo la selecciona (vista previa) y el segundo toque, sobre la fila ya activa, navega; la imagen y el nombre bajo la imagen navegan desde el primer toque. Con cursor se selecciona al pasar y se navega al hacer clic; con teclado, al enfocar (`:focus-visible`).
 - **Móvil (≤ 900 px):** una sola columna. Se quita el divisor y la imagen ocupa el 100 %.
 
 **Datos actuales** (los gestiona Sergio en Sanity; esto es una foto del 7 de octubre de 2026, las fechas siguen sin confirmar):
@@ -138,7 +142,7 @@ La columna "Tipo" ahora lista tecnologías, no categorías (antes: Demo, Shopify
 - Etiqueta `02 — Contacto`.
 - Texto: "¿Tienes un proyecto, una marca que necesita sitio o una sesión de fotos? Escríbeme y platicamos."
 - El correo va grande en serif (42/55), con una hairline debajo.
-- Links: Instagram · GitHub · LinkedIn.
+- Links: Instagram · GitHub · LinkedIn, en pestaña nueva. URLs por defecto en `src/data/settings.ts` (instagram.com/sergioherrasti, github.com/checodotcom, linkedin.com/in/sergio-herrasti-de-la-garza); las de "Ajustes del sitio" en Sanity las reemplazan cuando están publicadas.
 
 ### 4. Acerca (`#about`)
 
@@ -171,7 +175,7 @@ La columna "Tipo" ahora lista tecnologías, no categorías (antes: Demo, Shopify
 - [ ] Actualizar el README del sistema de diseño con lo que cambió: la regla áurea, la escala nueva, el header flotante con sombra y radio de 8 px, y que los títulos de sección usan solo la etiqueta sans.
 - [ ] Publicar el documento "Ajustes del sitio" en Sanity (correo y redes); hoy la API no lo devuelve.
 - [ ] Decidir si la nota de la lista ("Web · Editorial · Fotografía") y el copy de Acerca siguen vigentes ahora que el portafolio lista tecnologías y no incluye fotografía.
-- [ ] Hosting, webhook de rebuild desde Sanity y añadir la URL final a los CORS origins de Sanity.
+- [x] Hosting en Cloudflare Pages, webhook de rebuild desde Sanity y CORS de producción.
 - [x] Definir el stack de producción: Astro + Sanity (ver "Stack y contenido").
 - [ ] Decidir si cada proyecto tendrá su propia página de detalle.
 

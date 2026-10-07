@@ -30,6 +30,13 @@ export const project = defineType({
     }),
     defineField({ name: "description", title: "Descripción", type: "string", validation: (r) => r.required() }),
     defineField({
+      name: "url",
+      title: "URL del proyecto",
+      description: "Enlace al sitio en vivo. Si se deja vacío, el proyecto se muestra sin enlace.",
+      type: "url",
+      validation: (r) => r.uri({ scheme: ["http", "https"] }),
+    }),
+    defineField({
       name: "image",
       title: "Imagen",
       description: "Se muestra en proporción 1.618 : 1; el recorte se ajusta solo.",

@@ -11,34 +11,58 @@ const first = projects[0];
       <h2 class="label" id="portfolio-label">01 — Portafolio</h2>
       <ul class="projects">
         {
-          projects.map((p, i) => (
-            <li>
-              <button
-                type="button"
-                class="project"
-                aria-pressed={String(i === 0)}
-                data-name={p.name}
-                data-desc={p.desc}
-                data-image={p.image ?? ""}
-                data-placeholder={p.placeholder}
-              >
-                <span class="date">{formatDate(p)}</span>
-                <span class="name">{p.name}</span>
-                <span class="type">{p.type}</span>
-              </button>
-            </li>
-          ))
+          projects.map((p, i) => {
+            const data = {
+              "data-name": p.name,
+              "data-desc": p.desc,
+              "data-url": p.url ?? "",
+              "data-image": p.image ?? "",
+              "data-placeholder": p.placeholder,
+              "aria-current": i === 0 ? "true" : undefined,
+              class: "project",
+            };
+            return (
+              <li>
+                {p.url ? (
+                  <a {...data} href={p.url} target="_blank" rel="noopener noreferrer">
+                    <span class="date">{formatDate(p)}</span>
+                    <span class="name">{p.name}</span>
+                    <span class="type">{p.type}</span>
+                  </a>
+                ) : (
+                  <button {...data} type="button">
+                    <span class="date">{formatDate(p)}</span>
+                    <span class="name">{p.name}</span>
+                    <span class="type">{p.type}</span>
+                  </button>
+                )}
+              </li>
+            );
+          })
         }
       </ul>
       <p class="small portfolio-note">Web · Editorial · Fotografía</p>
     </div>
 
     <div class="portfolio-media" aria-live="polite">
-      <div class="media-image" id="media-image" role="img" aria-label={`Imagen de ${first.name}`}>
-        {first.image ? <img src={first.image} alt="" /> : <span id="media-placeholder">{first.placeholder}</span>}
-      </div>
+      <!-- El enlace de la imagen duplica el del título: se oculta al teclado y a lectores de pantalla. -->
+      <a
+        class="media-link"
+        id="media-link-image"
+        href={first.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        tabindex="-1"
+        aria-hidden="true"
+      >
+        <div class="media-image" id="media-image" role="img" aria-label={`Imagen de ${first.name}`}>
+          {first.image ? <img src={first.image} alt="" /> : <span>{first.placeholder}</span>}
+        </div>
+      </a>
       <div class="media-caption">
-        <h3 class="project-title" id="media-title">{first.name}</h3>
+        <h3 class="project-title">
+          <a id="media-link-title" href={first.url} target="_blank" rel="noopener noreferrer">{first.name}</a>
+        </h3>
         <p class="small" id="media-desc">{first.desc}</p>
       </div>
     </div>
@@ -46,14 +70,28 @@ const first = projects[0];
 </section>
 
 <script>
-  const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>(".project"));
+  const items = Array.from(document.querySelectorAll<HTMLElement>(".project"));
   const image = document.getElementById("media-image")!;
-  const title = document.getElementById("media-title")!;
+  const imageLink = document.getElementById("media-link-image") as HTMLAnchorElement;
+  const titleLink = document.getElementById("media-link-title") as HTMLAnchorElement;
   const desc = document.getElementById("media-desc")!;
 
-  function show(btn: HTMLButtonElement) {
-    const { name = "", desc: d = "", image: src = "", placeholder = "" } = btn.dataset;
-    buttons.forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
+  // Sin URL, el <a> queda sin href: es texto plano, no un enlace.
+  function setHref(a: HTMLAnchorElement, url: string) {
+    if (url) {
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+    } else {
+      a.removeAttribute("href");
+      a.removeAttribute("target");
+      a.removeAttribute("rel");
+    }
+  }
+
+  function show(el: HTMLElement) {
+    const { name = "", desc: d = "", url = "", image: src = "", placeholder = "" } = el.dataset;
+    items.forEach((b) => (b === el ? b.setAttribute("aria-current", "true") : b.removeAttribute("aria-current")));
     image.setAttribute("aria-label", `Imagen de ${name}`);
     image.replaceChildren();
     if (src) {
@@ -66,14 +104,28 @@ const first = projects[0];
       span.textContent = placeholder;
       image.appendChild(span);
     }
-    title.textContent = name;
+    setHref(imageLink, url);
+    setHref(titleLink, url);
+    titleLink.textContent = name;
     desc.textContent = d;
   }
 
-  buttons.forEach((b) => {
-    const select = () => show(b);
-    b.addEventListener("click", select);
-    b.addEventListener("mouseenter", select);
-    b.addEventListener("focus", select);
+  // En táctil no hay hover: el primer toque selecciona (vista previa) y el segundo, sobre la
+  // fila ya activa, navega. Los toques también disparan mouseenter y focus, así que esos dos
+  // solo seleccionan con cursor real y con teclado, para no navegar al primer toque.
+  const noHover = window.matchMedia("(hover: none)");
+
+  items.forEach((el) => {
+    el.addEventListener("mouseenter", () => {
+      if (!noHover.matches) show(el);
+    });
+    el.addEventListener("focus", () => {
+      if (el.matches(":focus-visible")) show(el);
+    });
+    el.addEventListener("click", (e) => {
+      const active = el.getAttribute("aria-current") === "true";
+      if (noHover.matches && el instanceof HTMLAnchorElement && !active) e.preventDefault();
+      show(el);
+    });
   });
 </script>

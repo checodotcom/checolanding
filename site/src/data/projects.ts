@@ -7,6 +7,7 @@ export interface Project {
   year: number;
   month: number; // 1–12
   desc: string;
+  url?: string; // enlace al proyecto; sin URL no se genera enlace
   image?: string; // URL de la imagen; sin imagen se muestra el placeholder
   placeholder: string;
 }
@@ -27,12 +28,12 @@ const sample: Project[] = [
 const builder = createImageUrlBuilder(sanityClient);
 
 // El desempate por _createdAt fija el orden entre proyectos del mismo mes (el sort de abajo es estable).
-const query = `*[_type == "project"] | order(year desc, month desc, _createdAt desc){ name, type, year, month, "desc": description, image }`;
+const query = `*[_type == "project"] | order(year desc, month desc, _createdAt desc){ name, type, year, month, "desc": description, url, image }`;
 
 async function fetchProjects(): Promise<Project[]> {
   try {
     const rows = await sanityClient.fetch<
-      Array<Omit<Project, "image" | "placeholder"> & { image?: { asset?: unknown } }>
+      Array<Omit<Project, "image" | "placeholder" | "url"> & { url?: string | null; image?: { asset?: unknown } }>
     >(query);
     if (!rows.length) return sample;
     return rows.map((r) => ({
@@ -41,6 +42,7 @@ async function fetchProjects(): Promise<Project[]> {
       year: r.year,
       month: r.month,
       desc: r.desc,
+      url: r.url || undefined,
       image: r.image?.asset ? builder.image(r.image).width(1618).auto("format").url() : undefined,
       placeholder: r.type === "Foto" ? "[fotografía]" : "[imagen]",
     }));
