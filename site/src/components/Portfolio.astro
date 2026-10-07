@@ -1,0 +1,79 @@
+---
+import { formatDate, getProjects } from "../data/projects";
+
+const projects = await getProjects();
+const first = projects[0];
+---
+
+<section class="section portfolio" id="portafolio" aria-labelledby="portfolio-label">
+  <div class="portfolio-grid">
+    <div class="portfolio-list">
+      <h2 class="label" id="portfolio-label">01 — Portafolio</h2>
+      <ul class="projects">
+        {
+          projects.map((p, i) => (
+            <li>
+              <button
+                type="button"
+                class="project"
+                aria-pressed={String(i === 0)}
+                data-name={p.name}
+                data-desc={p.desc}
+                data-image={p.image ?? ""}
+                data-placeholder={p.placeholder}
+              >
+                <span class="date">{formatDate(p)}</span>
+                <span class="name">{p.name}</span>
+                <span class="type">{p.type}</span>
+              </button>
+            </li>
+          ))
+        }
+      </ul>
+      <p class="small portfolio-note">Web · Editorial · Fotografía</p>
+    </div>
+
+    <div class="portfolio-media" aria-live="polite">
+      <div class="media-image" id="media-image" role="img" aria-label={`Imagen de ${first.name}`}>
+        {first.image ? <img src={first.image} alt="" /> : <span id="media-placeholder">{first.placeholder}</span>}
+      </div>
+      <div class="media-caption">
+        <h3 class="project-title" id="media-title">{first.name}</h3>
+        <p class="small" id="media-desc">{first.desc}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>(".project"));
+  const image = document.getElementById("media-image")!;
+  const title = document.getElementById("media-title")!;
+  const desc = document.getElementById("media-desc")!;
+
+  function show(btn: HTMLButtonElement) {
+    const { name = "", desc: d = "", image: src = "", placeholder = "" } = btn.dataset;
+    buttons.forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
+    image.setAttribute("aria-label", `Imagen de ${name}`);
+    image.replaceChildren();
+    if (src) {
+      const img = document.createElement("img");
+      img.src = src;
+      img.alt = "";
+      image.appendChild(img);
+    } else {
+      const span = document.createElement("span");
+      span.textContent = placeholder;
+      image.appendChild(span);
+    }
+    title.textContent = name;
+    desc.textContent = d;
+  }
+
+  buttons.forEach((b) => {
+    const select = () => show(b);
+    b.addEventListener("click", select);
+    b.addEventListener("mouseenter", select);
+    b.addEventListener("focus", select);
+  });
+</script>

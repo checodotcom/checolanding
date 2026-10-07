@@ -1,0 +1,28 @@
+<!-- Oculto en el hero; aparece cuando Portafolio llega a ≤ 89 px del borde superior. -->
+<header class="float-header" id="float-header" aria-hidden="true">
+  <a class="logo" href="#inicio" tabindex="-1">checodotcom</a>
+  <nav aria-label="Principal">
+    <a href="#portafolio" tabindex="-1">Portafolio</a>
+    <a href="#contact" tabindex="-1">Contacto</a>
+    <a href="#about" tabindex="-1">Acerca</a>
+  </nav>
+</header>
+
+<script>
+  const header = document.getElementById("float-header")!;
+  const portfolio = document.getElementById("portafolio")!;
+  const links = header.querySelectorAll("a");
+  let visible: boolean | null = null;
+
+  function update() {
+    const show = portfolio.getBoundingClientRect().top <= 89;
+    if (show === visible) return;
+    visible = show;
+    header.setAttribute("aria-hidden", String(!show));
+    links.forEach((a) => (show ? a.removeAttribute("tabindex") : a.setAttribute("tabindex", "-1")));
+  }
+
+  window.addEventListener("scroll", update, { passive: true });
+  window.addEventListener("resize", update);
+  update();
+</script>

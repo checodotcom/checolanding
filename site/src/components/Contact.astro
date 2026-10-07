@@ -1,0 +1,28 @@
+---
+import { getSettings } from "../data/settings";
+
+const { email, social } = await getSettings();
+---
+
+<section class="section" id="contact" aria-labelledby="contact-label">
+  <div class="two-col">
+    <h2 class="label" id="contact-label">02 — Contacto</h2>
+    <div class="col-body">
+      <p>¿Tienes un proyecto, una marca que necesita sitio o una sesión de fotos? Escríbeme y platicamos.</p>
+      {
+        email ? (
+          <a class="email" href={`mailto:${email}`}>{email}</a>
+        ) : (
+          <p class="email">[tu correo]</p>
+        )
+      }
+      <ul class="links">
+        {
+          social.map((s) => (
+            <li>{s.url ? <a href={s.url} rel="me noopener">{s.label}</a> : <span class="pending">{s.label}</span>}</li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</section>
