@@ -4,6 +4,8 @@
   "main": "worker/index.ts",
   "compatibility_date": "2026-10-01",
   "compatibility_flags": ["nodejs_compat"],
+  // Logs en el panel de Cloudflare (Observability). Aquí y no en el panel, para que cada deploy los conserve.
+  "observability": { "enabled": true },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",

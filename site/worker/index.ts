@@ -85,7 +85,9 @@ async function handleContact(request: Request, env: Env): Promise<Response> {
     });
     await env.CONTACT_EMAIL.send(new EmailMessage(env.MAIL_FROM, env.MAIL_TO, mime.asRaw()));
   } catch (err) {
-    console.error("[contact] no se pudo enviar:", err instanceof Error ? err.message : err);
+    // Solo el motivo técnico: nunca el nombre, el correo ni el mensaje del visitante.
+    const e = err as { name?: string; code?: string; message?: string };
+    console.error("[contact] no se pudo enviar:", e?.name, e?.code, e?.message, "| MAIL_TO definido:", Boolean(env.MAIL_TO));
     return json({ ok: false }, 502);
   }
   return json({ ok: true });
