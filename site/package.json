@@ -16,9 +16,13 @@
     "@sanity/image-url": "^2.1.1",
     "@sanity/ui": "^4.3.3",
     "astro": "^7.3.6",
+    "mimetext": "^3.0.28",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "sanity": "^6.18.0",
     "styled-components": "^6.5.3"
+  },
+  "devDependencies": {
+    "wrangler": "^4.148.0"
   }
 }

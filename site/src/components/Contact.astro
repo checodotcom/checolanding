@@ -24,11 +24,8 @@ const PLACEHOLDER = "[tu correo]";
             autocapitalize="off"
           />
         </label>
-        <!-- Anzuelo para bots: invisible para personas; si llega con valor, se descarta. -->
-        <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
-        <button class="send" type="submit" hidden>Enviar</button>
+        <button class="send" type="submit" hidden>Continuar</button>
       </form>
-      <p class="small lead-status" id="lead-status" role="status" aria-live="polite"></p>
 
       <ul class="links">
         {
@@ -41,58 +38,175 @@ const PLACEHOLDER = "[tu correo]";
   </div>
 </section>
 
+<dialog class="modal" id="lead-dialog" aria-labelledby="lead-dialog-title">
+  <div class="modal-panel">
+    <h2 class="sr-only" id="lead-dialog-title">Escríbeme</h2>
+    <button class="modal-close" type="button" data-close aria-label="Cerrar">
+      <svg width="13" height="13" viewBox="0 0 13 13" aria-hidden="true"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.2" fill="none" /></svg>
+    </button>
+
+    <form class="modal-form" id="lead-dialog-form" novalidate>
+      <label class="field">
+        <span class="label">Tu correo</span>
+        <input class="field-email" type="email" name="email" autocomplete="email" inputmode="email" spellcheck="false" autocapitalize="off" required />
+      </label>
+
+      <label class="field">
+        <span class="label">Nombre completo</span>
+        <input type="text" name="name" autocomplete="name" maxlength="120" required />
+      </label>
+
+      <label class="field">
+        <span class="label">Mensaje</span>
+        <textarea name="message" rows="5" maxlength="250" placeholder="Cuéntame qué tienes en mente."></textarea>
+        <span class="small field-count" aria-hidden="true"><span id="lead-count">0</span> / 250</span>
+      </label>
+
+      <!-- Anzuelo para bots: invisible para personas; si llega con valor, se descarta. -->
+      <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+      <p class="small modal-status" id="lead-status" role="status" aria-live="polite"></p>
+
+      <div class="modal-actions">
+        <button class="text-button" type="button" data-close>Cancelar</button>
+        <button class="send" type="submit">Enviar</button>
+      </div>
+    </form>
+
+    <div class="modal-done" id="lead-done" hidden>
+      <p>Listo. Te escribo pronto.</p>
+      <div class="modal-actions">
+        <button class="send" type="button" data-close>Cerrar</button>
+      </div>
+    </div>
+  </div>
+</dialog>
+
 <script>
+  // Algo@dominio.terminación (mínimo 2 letras al final: .com, .mx, .io…)
+  const VALID = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  // ——— campo de correo de la página ———
   const form = document.getElementById("lead-form") as HTMLFormElement;
   const field = form.querySelector<HTMLElement>(".email-field")!;
   const input = form.querySelector<HTMLInputElement>('input[name="email"]')!;
-  const honeypot = form.querySelector<HTMLInputElement>('input[name="website"]')!;
-  const send = form.querySelector<HTMLButtonElement>(".send")!;
-  const status = document.getElementById("lead-status")!;
-
-  // Algo@dominio.terminación (mínimo 2 letras al final: .com, .mx, .io…)
-  const VALID = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-  const isValid = () => VALID.test(input.value.trim());
+  const next = form.querySelector<HTMLButtonElement>(".send")!;
 
   function sync() {
     // El ancho del campo sigue al texto: el subrayado crece con lo que se escribe.
     field.dataset.value = input.value || field.dataset.placeholder || "";
-    const ok = isValid();
-    if (send.hidden === ok) {
-      send.hidden = !ok;
+    const ok = VALID.test(input.value.trim());
+    if (next.hidden === ok) {
+      next.hidden = !ok;
       if (ok) {
-        send.classList.remove("is-in");
-        void send.offsetWidth; // reinicia la animación de entrada
-        send.classList.add("is-in");
+        next.classList.remove("is-in");
+        void next.offsetWidth; // reinicia la animación de entrada
+        next.classList.add("is-in");
       }
     }
   }
+  input.addEventListener("input", sync);
 
-  input.addEventListener("input", () => {
-    status.textContent = "";
-    sync();
+  // ——— diálogo ———
+  const dialog = document.getElementById("lead-dialog") as HTMLDialogElement;
+  const dForm = document.getElementById("lead-dialog-form") as HTMLFormElement;
+  const dEmail = dForm.elements.namedItem("email") as HTMLInputElement;
+  const dName = dForm.elements.namedItem("name") as HTMLInputElement;
+  const dMessage = dForm.elements.namedItem("message") as HTMLTextAreaElement;
+  const dHoney = dForm.elements.namedItem("website") as HTMLInputElement;
+  const dSend = dForm.querySelector<HTMLButtonElement>(".send")!;
+  const dStatus = document.getElementById("lead-status")!;
+  const dCount = document.getElementById("lead-count")!;
+  const dDone = document.getElementById("lead-done")!;
+  let sent = false;
+
+  function openDialog() {
+    dEmail.value = input.value.trim();
+    dForm.hidden = false;
+    dDone.hidden = true;
+    dStatus.textContent = "";
+    dialog.showModal();
+    requestAnimationFrame(() => dialog.classList.add("is-open"));
+    (dName.value ? dMessage : dName).focus();
+  }
+
+  function closeDialog() {
+    if (!dialog.open) return;
+    dialog.classList.remove("is-open");
+    const finish = () => {
+      dialog.close();
+      if (sent) {
+        // Tras un envío exitoso se limpia todo para no dejar el correo a la vista.
+        sent = false;
+        dForm.reset();
+        dCount.textContent = "0";
+        input.value = "";
+        sync();
+      } else {
+        input.value = dEmail.value.trim() || input.value;
+        sync();
+      }
+    };
+    if (reduceMotion.matches) return finish();
+    let done = false;
+    const once = () => { if (!done) { done = true; finish(); } };
+    dialog.addEventListener("transitionend", once, { once: true });
+    setTimeout(once, 340); // respaldo si no llega transitionend
+  }
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (VALID.test(input.value.trim())) openDialog();
   });
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (!isValid() || honeypot.value) return;
+  dialog.addEventListener("cancel", (e) => {
+    e.preventDefault(); // Esc: se cierra con animación
+    closeDialog();
+  });
+  dialog.addEventListener("click", (e) => {
+    // El clic en el fondo cae sobre el <dialog> mismo, no sobre el panel.
+    if (e.target === dialog) closeDialog();
+  });
+  dialog.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("click", closeDialog));
 
-    send.disabled = true;
-    send.textContent = "Enviando…";
-    status.textContent = "";
+  dMessage.addEventListener("input", () => (dCount.textContent = String(dMessage.value.length)));
+
+  dForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    dStatus.textContent = "";
+    if (!VALID.test(dEmail.value.trim())) {
+      dStatus.textContent = "Revisa tu correo.";
+      return dEmail.focus();
+    }
+    if (dName.value.trim().length < 2) {
+      dStatus.textContent = "Escribe tu nombre completo.";
+      return dName.focus();
+    }
+    if (dHoney.value) return;
+
+    dSend.disabled = true;
+    dSend.textContent = "Enviando…";
     try {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: input.value.trim(), website: honeypot.value }),
+        body: JSON.stringify({
+          email: dEmail.value.trim(),
+          name: dName.value.trim(),
+          message: dMessage.value.trim(),
+          website: dHoney.value,
+        }),
       });
       if (!res.ok) throw new Error(String(res.status));
-      input.readOnly = true;
-      send.hidden = true;
-      status.textContent = "Listo. Te escribo pronto.";
+      sent = true;
+      dForm.hidden = true;
+      dDone.hidden = false;
     } catch {
-      send.disabled = false;
-      send.textContent = "Enviar";
-      status.textContent = "No se pudo enviar. Intenta de nuevo.";
+      dStatus.textContent = "No se pudo enviar. Intenta de nuevo.";
+    } finally {
+      dSend.disabled = false;
+      dSend.textContent = "Enviar";
     }
   });
 
