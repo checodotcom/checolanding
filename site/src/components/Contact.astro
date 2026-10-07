@@ -1,7 +1,8 @@
 ---
 import { getSettings } from "../data/settings";
 
-const { email, social } = await getSettings();
+const { social } = await getSettings();
+const PLACEHOLDER = "[tu correo]";
 ---
 
 <section class="section" id="contact" aria-labelledby="contact-label">
@@ -9,13 +10,26 @@ const { email, social } = await getSettings();
     <h2 class="label" id="contact-label">02 — Contacto</h2>
     <div class="col-body">
       <p>¿Tienes un proyecto, una marca que necesita sitio o una sesión de fotos? Escríbeme y platicamos.</p>
-      {
-        email ? (
-          <a class="email" href={`mailto:${email}`}>{email}</a>
-        ) : (
-          <p class="email">[tu correo]</p>
-        )
-      }
+
+      <form class="lead" id="lead-form" novalidate>
+        <label class="email-field" data-value={PLACEHOLDER} data-placeholder={PLACEHOLDER}>
+          <span class="sr-only">Tu correo</span>
+          <input
+            type="email"
+            name="email"
+            placeholder={PLACEHOLDER}
+            autocomplete="email"
+            inputmode="email"
+            spellcheck="false"
+            autocapitalize="off"
+          />
+        </label>
+        <!-- Anzuelo para bots: invisible para personas; si llega con valor, se descarta. -->
+        <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
+        <button class="send" type="submit" hidden>Enviar</button>
+      </form>
+      <p class="small lead-status" id="lead-status" role="status" aria-live="polite"></p>
+
       <ul class="links">
         {
           social.map((s) => (
@@ -26,3 +40,61 @@ const { email, social } = await getSettings();
     </div>
   </div>
 </section>
+
+<script>
+  const form = document.getElementById("lead-form") as HTMLFormElement;
+  const field = form.querySelector<HTMLElement>(".email-field")!;
+  const input = form.querySelector<HTMLInputElement>('input[name="email"]')!;
+  const honeypot = form.querySelector<HTMLInputElement>('input[name="website"]')!;
+  const send = form.querySelector<HTMLButtonElement>(".send")!;
+  const status = document.getElementById("lead-status")!;
+
+  // Algo@dominio.terminación (mínimo 2 letras al final: .com, .mx, .io…)
+  const VALID = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  const isValid = () => VALID.test(input.value.trim());
+
+  function sync() {
+    // El ancho del campo sigue al texto: el subrayado crece con lo que se escribe.
+    field.dataset.value = input.value || field.dataset.placeholder || "";
+    const ok = isValid();
+    if (send.hidden === ok) {
+      send.hidden = !ok;
+      if (ok) {
+        send.classList.remove("is-in");
+        void send.offsetWidth; // reinicia la animación de entrada
+        send.classList.add("is-in");
+      }
+    }
+  }
+
+  input.addEventListener("input", () => {
+    status.textContent = "";
+    sync();
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!isValid() || honeypot.value) return;
+
+    send.disabled = true;
+    send.textContent = "Enviando…";
+    status.textContent = "";
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: input.value.trim(), website: honeypot.value }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      input.readOnly = true;
+      send.hidden = true;
+      status.textContent = "Listo. Te escribo pronto.";
+    } catch {
+      send.disabled = false;
+      send.textContent = "Enviar";
+      status.textContent = "No se pudo enviar. Intenta de nuevo.";
+    }
+  });
+
+  sync();
+</script>

@@ -141,14 +141,16 @@ La columna "Tipo" ahora lista tecnologías, no categorías (antes: Demo, Shopify
 
 - Etiqueta `02 — Contacto`.
 - Texto: "¿Tienes un proyecto, una marca que necesita sitio o una sesión de fotos? Escríbeme y platicamos."
-- El correo va grande en serif (42/55), con una hairline debajo.
+- "[tu correo]" es un campo donde el **visitante** escribe su correo (no el de Sergio): serif 42/55 con hairline debajo, el ancho sigue al texto. Cuando el correo es válido (`algo@dominio.xx`, mínimo 2 letras tras el punto) aparece el botón "Enviar" con la estética del header flotante (`surface-raised`, borde `line`, radio 8 px, misma sombra; excepción pedida por Sergio). El `POST` va a `/api/contact` (JSON `{ email, website }`; `website` es un honeypot anti-bots). Estados: "Enviando…", "Listo. Te escribo pronto.", "No se pudo enviar. Intenta de nuevo."
+- **El destino del envío aún no existe** (ver Pendientes): sin `/api/contact` el botón muestra el error. No publicar el formulario hasta resolverlo.
+- El campo "correo" de "Ajustes del sitio" ya no se muestra en Contacto; queda disponible como destinatario de los avisos.
 - Links: Instagram · GitHub · LinkedIn, en pestaña nueva. URLs por defecto en `src/data/settings.ts` (instagram.com/sergioherrasti, github.com/checodotcom, linkedin.com/in/sergio-herrasti-de-la-garza); las de "Ajustes del sitio" en Sanity las reemplazan cuando están publicadas.
 
 ### 4. Acerca (`#about`)
 
 - Etiqueta `03 — Acerca`.
 - Dos párrafos sobre Sergio: Product Analyst que diseña y desarrolla sitios y tiendas a la medida, y checodotcom como el lugar que reúne ese trabajo y su fotografía.
-- Debajo, una fila de 3 columnas separada por una hairline: Diseño (Web · UX/UI), Desarrollo (Shopify · Astro) y Foto (Retrato · Calle).
+- Debajo, una cuadrícula de 3 × 2 separada por una hairline, para mostrar el recorrido full stack: Diseño (Web · UX/UI), Desarrollo (Astro · Eleventy · JS · Node · APIs), Foto (Retrato · Calle), Contenido (Sanity · Shopify), Infraestructura (Cloudflare · Git · DNS) y Medición (Analítica de producto). Sergio puede afinar las herramientas de Medición.
 
 ### Footer
 
@@ -173,6 +175,7 @@ La columna "Tipo" ahora lista tecnologías, no categorías (antes: Demo, Shopify
 - [ ] Correo de contacto y URLs de Instagram, GitHub y LinkedIn.
 - [ ] Elegir el fondo definitivo (Hueso, Blanco o Niebla) y quitar los otros.
 - [ ] Actualizar el README del sistema de diseño con lo que cambió: la regla áurea, la escala nueva, el header flotante con sombra y radio de 8 px, y que los títulos de sección usan solo la etiqueta sans.
+- [ ] Conectar el formulario de Contacto: decidir destino (correo con Resend, guardar en Sanity o servicio de formularios), crear `site/functions/api/contact.ts` (Cloudflare Pages Function) y guardar claves solo en variables de entorno de Cloudflare. Sergio pidió que se lo recuerden; hasta entonces el formulario no está commiteado.
 - [ ] Publicar el documento "Ajustes del sitio" en Sanity (correo y redes); hoy la API no lo devuelve.
 - [ ] Decidir si la nota de la lista ("Web · Editorial · Fotografía") y el copy de Acerca siguen vigentes ahora que el portafolio lista tecnologías y no incluye fotografía.
 - [x] Hosting en Cloudflare Pages, webhook de rebuild desde Sanity y CORS de producción.

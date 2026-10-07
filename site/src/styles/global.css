@@ -287,14 +287,82 @@ a.project:hover .name { text-decoration: underline; text-underline-offset: 3px; 
 
 /* ——— contacto ——— */
 
-.email {
+.lead {
+  position: relative;
   margin-top: var(--s-21);
-  display: inline-block;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-13) var(--s-21);
+}
+
+/* Campo de correo: se ve igual que el texto serif de 42 px con su hairline; el ancho sigue al texto. */
+.email-field {
+  display: inline-grid;
+  max-width: 100%;
   padding-bottom: var(--s-13);
   border-bottom: 1px solid var(--line);
   font: 400 42px/55px var(--serif);
   color: var(--ink-strong);
-  overflow-wrap: anywhere;
+}
+.email-field::after {
+  content: attr(data-value) " ";
+  grid-area: 1 / 1;
+  visibility: hidden;
+  white-space: pre;
+  overflow: hidden;
+}
+.email-field input {
+  grid-area: 1 / 1;
+  width: 0; /* sin ancho propio: lo marca el texto espejo del ::after */
+  min-width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  appearance: none;
+  outline: none;
+}
+.email-field input::placeholder { color: var(--ink-strong); opacity: 1; }
+.email-field:focus-within { outline: 2px solid var(--ink-strong); outline-offset: 3px; border-radius: 2px; }
+
+/* Botón de enviar: misma estética que el header flotante (a petición de Sergio). */
+.send {
+  min-height: 44px;
+  padding: var(--s-8) var(--s-21);
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(38, 38, 38, .04), 0 8px 34px rgba(38, 38, 38, .06);
+  font: 400 16px/26px var(--sans);
+  color: var(--ink-muted);
+}
+.send:hover:not(:disabled) { color: var(--ink-strong); }
+.send:disabled { cursor: default; }
+.send[hidden] { display: none; }
+.send.is-in { animation: send-in 260ms ease both; }
+
+@keyframes send-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .send.is-in { animation: none; } }
+
+.lead-status { min-height: 21px; margin-top: var(--s-8); }
+
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .links {
