@@ -190,7 +190,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 }
 .two-col > .label { flex: 1 1 320px; }
 .two-col > .col-body { flex: 1.618 1 320px; max-width: 610px; }
-.two-col > .col-body > p + p { margin-top: var(--s-13); }
+.two-col > .col-body > p + p { margin-top: var(--s-21); }
 
 /* ——— portafolio ——— */
 
@@ -208,6 +208,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 }
 
 .portfolio-list {
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   padding: var(--s-34) var(--s-34) 0 0;
@@ -218,7 +219,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 
 .project {
   display: grid;
-  grid-template-columns: 116px 1fr auto;
+  /* fecha fija · nombre flexible · tags al ancho de su texto pero sin salirse de la fila */
+  grid-template-columns: 116px minmax(min-content, 1fr) minmax(0, max-content);
   align-items: baseline;
   column-gap: var(--s-13);
   width: 100%;
@@ -227,10 +229,31 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   color: var(--ink-display);
 }
 .project .date { font-size: 13px; line-height: 21px; font-variant-numeric: tabular-nums; }
-.project .name { font-size: 16px; line-height: 34px; }
-.project .type { font-size: 13px; line-height: 21px; }
+.project .name { font-size: 16px; line-height: 34px; overflow-wrap: break-word; }
+.project .type { font-size: 13px; line-height: 21px; justify-self: end; text-align: right; }
+.project .tag { display: inline-block; white-space: nowrap; } /* cada tag es una pieza: si no cabe, baja entero */
 .project[aria-current="true"] { color: var(--ink-strong); }
 a.project:hover .name { text-decoration: underline; text-underline-offset: 3px; }
+
+/* Lista angosta (entre ~900 y ~1180 px de ventana): fecha arriba; nombre y tags en la línea de abajo,
+   para que nada se encime ni se parta letra por letra. En una sola columna (≤ 900 px) o con la lista
+   ancha vuelve a ser una fila. */
+@container (max-width: 340px) {
+  .project {
+    /* El bloque de tags ocupa las dos filas, anclado arriba y a la derecha: su primera línea queda a la
+       altura de la fecha, y si hay más tags bajan por el costado del título (incluso rebasándolo).
+       El nombre conserva su palabra más larga, así que nunca se parte ni se tapa. */
+    grid-template-columns: minmax(min-content, 1fr) minmax(0, max-content);
+    /* Una tercera fila vacía y elástica absorbe la altura extra de los tags: así la fecha y el nombre
+       siempre quedan juntos arriba, sin separarse cuando el bloque de tags crece. */
+    grid-template-areas: "date type" "name type" ". type";
+    grid-template-rows: auto auto 1fr;
+    align-items: start;
+  }
+  .project .date { grid-area: date; }
+  .project .type { grid-area: type; align-self: start; }
+  .project .name { grid-area: name; line-height: 26px; }
+}
 
 .portfolio-note { margin-top: auto; padding-bottom: var(--s-34); }
 
@@ -296,28 +319,32 @@ a.project:hover .name { text-decoration: underline; text-underline-offset: 3px; 
   gap: var(--s-13) var(--s-21);
 }
 
-/* Campo de correo: se ve igual que el texto serif de 42 px con su hairline; el ancho sigue al texto. */
+/* Campo de correo: se ve igual que el texto serif de 42 px con su hairline. La caja y la línea tienen
+   siempre el largo de "[tu correo]"; el <input> se ancla al borde derecho de la caja y, si el correo
+   es más largo, crece hacia la izquierda por el espacio libre (nunca empuja el botón ni la línea). */
 .email-field {
-  display: inline-grid;
-  max-width: 100%;
+  position: relative;
+  display: inline-block;
+  flex: none;
   padding-bottom: var(--s-13);
   border-bottom: 1px solid var(--line);
   font: 400 42px/55px var(--serif);
   color: var(--ink-strong);
 }
 .email-field::after {
-  content: attr(data-value) " ";
-  grid-area: 1 / 1;
+  content: attr(data-placeholder) " "; /* texto espejo: solo marca el tamaño de la caja */
+  display: block;
   visibility: hidden;
   white-space: pre;
-  overflow: hidden;
 }
 .email-field input {
-  grid-area: 1 / 1;
-  width: 0; /* sin ancho propio: lo marca el texto espejo del ::after */
-  min-width: 100%;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%; /* JS lo ensancha hacia la izquierda cuando el correo no cabe */
   margin: 0;
-  padding: 0;
+  padding: 0 0 var(--s-13); /* el aire de abajo queda dentro del campo: el anillo de foco incluye la línea */
   border: 0;
   border-radius: 0;
   background: none;
@@ -328,7 +355,12 @@ a.project:hover .name { text-decoration: underline; text-underline-offset: 3px; 
   outline: none;
 }
 .email-field input::placeholder { color: var(--ink-strong); opacity: 1; }
-.email-field:focus-within { outline: 2px solid var(--ink-strong); outline-offset: 3px; border-radius: 2px; }
+.email-field input:focus { outline: 2px solid var(--ink-strong); outline-offset: 3px; border-radius: 2px; }
+
+/* En estrecho no hay espacio libre a la izquierda: la caja ocupa todo el ancho de la columna. */
+@media (max-width: 720px) {
+  .email-field { display: block; width: 100%; }
+}
 
 /* Botón de enviar: misma estética que el header flotante (a petición de Sergio). */
 .send {
@@ -353,7 +385,6 @@ a.project:hover .name { text-decoration: underline; text-underline-offset: 3px; 
    campo en vez de empujar el botón (y todo lo de abajo) hacia otra fila. */
 @media (min-width: 721px) {
   .lead { flex-wrap: nowrap; }
-  .email-field { min-width: 0; }
 }
 
 /* En estrecho el botón siempre tiene su propia fila (reservada aunque esté oculto): así no
@@ -526,13 +557,14 @@ body:has(dialog[open]) { overflow: hidden; }
 
 .skills {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--s-21);
-  margin-top: var(--s-21);
-  padding-top: var(--s-21);
+  /* 3 columnas cuando caben (≥ 160 px cada una); si no, 2: así las listas no se parten mal. */
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--s-34) var(--s-21); /* filas más separadas que las columnas */
+  margin-top: var(--s-55);
+  padding-top: var(--s-34);
   border-top: 1px solid var(--line);
 }
-.skills dd { margin-top: var(--s-5); color: var(--ink); }
+.skills dd { margin-top: var(--s-8); color: var(--ink); text-wrap: balance; }
 
 /* ——— footer ——— */
 

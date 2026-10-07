@@ -9,10 +9,10 @@ const PLACEHOLDER = "[tu correo]";
   <div class="two-col">
     <h2 class="label" id="contact-label">02 — Contacto</h2>
     <div class="col-body">
-      <p>¿Tienes un proyecto, una marca que necesita sitio o una sesión de fotos? Escríbeme y platicamos.</p>
+      <p>¿Tienes un proyecto o una marca que necesita sitio? Escríbeme y platicamos.</p>
 
       <form class="lead" id="lead-form" novalidate>
-        <label class="email-field" data-value={PLACEHOLDER} data-placeholder={PLACEHOLDER}>
+        <label class="email-field" data-placeholder={PLACEHOLDER}>
           <span class="sr-only">Tu correo</span>
           <input
             type="email"
@@ -97,9 +97,33 @@ const PLACEHOLDER = "[tu correo]";
   const input = form.querySelector<HTMLInputElement>('input[name="email"]')!;
   const next = form.querySelector<HTMLButtonElement>(".send")!;
 
+  // La caja y su línea miden siempre lo mismo (el largo de "[tu correo]"). Si el correo no cabe, el
+  // <input> se ensancha hacia la izquierda por el espacio libre; si aun así no cabe, la letra baja
+  // un paso de la escala (42 → 26 → 16) y, solo como último recurso, el texto se desplaza por dentro.
+  const SIZES = [42, 26, 16];
+  const wide = window.matchMedia("(min-width: 721px)");
+
+  function fit() {
+    input.style.width = "";
+    input.style.fontSize = "";
+    if (!input.value) return;
+    const box = field.clientWidth;
+    const margin = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--margin")) || 34;
+    // Espacio libre a la izquierda de la caja (en estrecho no hay: la caja ya ocupa la columna).
+    const room = box + (wide.matches ? Math.max(0, field.getBoundingClientRect().left - margin) : 0);
+    for (const size of SIZES) {
+      input.style.fontSize = `${size}px`;
+      input.style.width = "0px";
+      const text = input.scrollWidth + 2; // + el cursor
+      if (text <= room || size === SIZES[SIZES.length - 1]) {
+        input.style.width = `${Math.min(Math.max(text, box), room)}px`;
+        return;
+      }
+    }
+  }
+
   function sync() {
-    // El ancho del campo sigue al texto: el subrayado crece con lo que se escribe.
-    field.dataset.value = input.value || field.dataset.placeholder || "";
+    fit();
     const ok = VALID.test(input.value.trim());
     if (next.hidden === ok) {
       next.hidden = !ok;
@@ -111,6 +135,7 @@ const PLACEHOLDER = "[tu correo]";
     }
   }
   input.addEventListener("input", sync);
+  window.addEventListener("resize", fit);
 
   // ——— diálogo ———
   const dialog = document.getElementById("lead-dialog") as HTMLDialogElement;

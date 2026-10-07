@@ -3,6 +3,13 @@ import { formatDate, getProjects } from "../data/projects";
 
 const projects = await getProjects();
 const first = projects[0];
+
+// "Eleventy, Nunjucks" → ["Eleventy,", "Nunjucks"]: cada tag es una pieza que no se parte; si no caben
+// en una línea, bajan uno debajo del otro (alineados a la derecha). La coma se queda con su tag.
+const tags = (type: string) => {
+  const parts = type.split(",").map((t) => t.trim()).filter(Boolean);
+  return parts.map((t, i) => (i < parts.length - 1 ? `${t},` : t));
+};
 ---
 
 <section class="section portfolio" id="portafolio" aria-labelledby="portfolio-label">
@@ -27,13 +34,13 @@ const first = projects[0];
                   <a {...data} href={p.url} target="_blank" rel="noopener noreferrer">
                     <span class="date">{formatDate(p)}</span>
                     <span class="name">{p.name}</span>
-                    <span class="type">{p.type}</span>
+                    <span class="type">{tags(p.type).map((t) => (<><span class="tag">{t}</span>{" "}</>))}</span>
                   </a>
                 ) : (
                   <button {...data} type="button">
                     <span class="date">{formatDate(p)}</span>
                     <span class="name">{p.name}</span>
-                    <span class="type">{p.type}</span>
+                    <span class="type">{tags(p.type).map((t) => (<><span class="tag">{t}</span>{" "}</>))}</span>
                   </button>
                 )}
               </li>
@@ -41,7 +48,7 @@ const first = projects[0];
           })
         }
       </ul>
-      <p class="small portfolio-note">Web · Editorial · Fotografía</p>
+      <p class="small portfolio-note">Web · Editorial</p>
     </div>
 
     <div class="portfolio-media" aria-live="polite">

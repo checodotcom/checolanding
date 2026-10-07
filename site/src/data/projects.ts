@@ -22,7 +22,6 @@ const sample: Project[] = [
   { name: "Clínica quiropráctica", type: "Demo", year: 2026, month: 10, desc: "Sitio de conversión · Astro + Go High Level", placeholder: "[imagen]" },
   { name: "Framewear", type: "Shopify", year: 2026, month: 9, desc: "Sitio de marca para una marca de ropa", placeholder: "[imagen]" },
   { name: "Private Club", type: "Editorial", year: 2026, month: 8, desc: "Rediseño editorial de un blog de música", placeholder: "[imagen]" },
-  { name: "Fotografía", type: "Foto", year: 2026, month: 5, desc: "Serie personal", placeholder: "[fotografía]" },
 ];
 
 const builder = createImageUrlBuilder(sanityClient);
@@ -44,7 +43,7 @@ async function fetchProjects(): Promise<Project[]> {
       desc: r.desc,
       url: r.url || undefined,
       image: r.image?.asset ? builder.image(r.image).width(1618).auto("format").url() : undefined,
-      placeholder: r.type === "Foto" ? "[fotografía]" : "[imagen]",
+      placeholder: "[imagen]",
     }));
   } catch (err) {
     console.warn("[sanity] No se pudieron leer los proyectos, uso datos de ejemplo:", (err as Error).message);

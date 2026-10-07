@@ -11,7 +11,7 @@ export const project = defineType({
     defineField({
       name: "type",
       title: "Tipo",
-      description: "Etiqueta corta: Demo, Shopify, Editorial, Foto…",
+      description: "Etiqueta corta con las tecnologías: Astro, Shopify, Vanilla JS…",
       type: "string",
       validation: (r) => r.required(),
     }),

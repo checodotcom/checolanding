@@ -1,6 +1,6 @@
 # checodotcom — landing page
 
-Sitio personal de Sergio (alias web **checodotcom**): portafolio de diseño web, desarrollo front-end y fotografía, con llamado a contacto para clientes. Es una sola página con anclas. El tono es callado y editorial: grises sobre un fondo casi blanco. El único gesto grande es el wordmark.
+Sitio personal de Sergio (alias web **checodotcom**): portafolio de diseño web y desarrollo front-end, con llamado a contacto para clientes. La fotografía **se quitó por ahora** (decisión de Sergio, 7 oct 2026) y se incorporará más adelante; ver "Fotografía (pausada)". Es una sola página con anclas. El tono es callado y editorial: grises sobre un fondo casi blanco. El único gesto grande es el wordmark.
 
 - **Idioma:** español (`lang="es"`). Voz corta, sin signos de exclamación. La marca va en minúsculas (`checodotcom`).
 - **Diseño de referencia:** un canvas de Claude Design (artboard `Main.dc.html`, 1440 px de ancho). La implementación final debe replicarlo.
@@ -22,6 +22,7 @@ Sitio personal de Sergio (alias web **checodotcom**): portafolio de diseño web,
 - **Formulario de contacto (backend):** Worker en `worker/index.ts` (config en `wrangler.jsonc`; el build de Cloudflare ejecuta `npm run build` y luego `npx wrangler deploy`, con raíz `site`). Solo atiende `POST /api/contact` (`assets.run_worker_first: ["/api/*"]`); el resto sale directo de `dist/`. Valida en el servidor (correo estricto, nombre ≥ 2, mensaje ≤ 250, cuerpo ≤ 4 KB), exige `Origin` en `ALLOWED_ORIGINS`, descarta el honeypot en silencio y limpia saltos de línea para evitar inyección de cabeceras. Envía con el binding `send_email` (`CONTACT_EMAIL`) vía Email Routing: remitente `contacto@checodot.com` (var `MAIL_FROM`), `Reply-To` con el correo del visitante, cuerpo UTF-8 en base64. El destino `MAIL_TO` es un **secreto en el panel de Cloudflare**, no está en el repo. Va en **Settings → Runtime variables and secrets** (pestaña Production, casilla *Secret*); la tarjeta "Variables and secrets" de la sección *Builds* es solo de compilación y el Worker **no** la ve (síntoma: el log dice `MAIL_TO definido: false` y el formulario responde 502). `observability` está activada en `wrangler.jsonc`: los errores de envío se leen en Observability → Logs (línea `[contact] no se pudo enviar:`). Para probar en local: `.dev.vars` con `MAIL_TO` falso y `ALLOWED_ORIGINS=http://localhost:8788`, y `npx wrangler dev --port 8788` (los correos simulados caen como `.eml` en `.wrangler/`).
 - **Lista de contactos (D1):** cada envío válido se guarda en la base D1 `checodotcom-contactos` (binding `DB`, tabla `contactos`: `id`, `creado_en` en **hora de Ciudad de México** (la calcula el Worker con la zona `America/Mexico_City`; la migración `0002` convirtió las filas viejas, que estaban en UTC), `nombre`, `correo`, `mensaje`, `estado` ∈ `nuevo` | `respondido` | `descartado`). Solo se guarda lo que el visitante escribe; no hay IP. El Worker **guarda primero y avisa por correo después**; responde error solo si fallan las dos cosas. Se consulta en el panel (D1 → checodotcom-contactos → Console): `SELECT * FROM contactos ORDER BY id DESC;` y se marca con `UPDATE contactos SET estado = 'respondido' WHERE id = N;`. El esquema vive en `migrations/`; cada migración nueva se aplica a la base real **antes** de desplegar el código que la usa: `npx wrangler d1 migrations apply checodotcom-contactos --remote`. En local: la misma orden con `--local`.
 - **Correo de aviso:** `worker/email-template.ts` genera un `multipart/alternative` (texto + HTML con estilos en línea y tablas, paleta del sitio; Georgia y la sans del sistema sustituyen a Baskervville e Inter, que no existen en el correo). Lleva marca, "Nuevo contacto", nombre, correo, mensaje, botón "Responder" (mailto) y pie con n.º de contacto y hora de México. Todo lo que escribe el visitante se escapa antes de entrar al HTML. El asunto sigue siendo `Contacto: {nombre}` (útil para el filtro de Gmail).
+- **Campo de correo de la página:** la caja y su hairline miden siempre lo mismo que "[tu correo]" y no se mueven (tampoco el botón ni las redes). El `<input>` va anclado al borde derecho de la caja: si el correo es más largo crece hacia la izquierda por el espacio libre de la página (hasta el margen de 34 px); si aun así no cabe, la letra baja un paso de la escala (42 → 26 → 16) y solo como último recurso el texto se desplaza por dentro. En ≤ 720 px no hay espacio a la izquierda: la caja ocupa el ancho de la columna y se aplica la misma reducción de letra. La lógica está en `fit()` de `Contact.astro`; el anillo de foco va en el `<input>`.
 - **Formulario en la página:** el botón Continuar tiene su sitio reservado (`visibility: hidden`; en estrecho tiene su propia fila y en ancho nunca baja de línea), así que al aparecer no empuja el bloque de redes.
 - **Email Routing:** activo en `checodot.com` (MX `route1/2/3.mx.cloudflare.net`, SPF y DKIM de Cloudflare). Regla `contacto@checodot.com` → Gmail de Sergio; catch-all apagado. DMARC en `p=none`.
 - **Flujo de contenido:** al publicar en Sanity, un webhook (filtro `_type in ["project","siteSettings"]`, solo documentos publicados) llama al deploy hook de Cloudflare y el sitio se reconstruye solo. La URL del deploy hook es secreta: vive solo en Sanity, nunca en el repo.
@@ -123,9 +124,10 @@ El texto siempre va en gris, nunca en negro.
 - **Estructura** (basada en un índice editorial de 3 columnas): `grid-template-columns: repeat(3, minmax(0,1fr))`, column-gap de 34 px.
 - **Columna 1, lista.** Lleva un divisor vertical de 1 px a la derecha y padding de 34 px.
   - Arriba va la etiqueta `01 — Portafolio`. Debajo, la lista de proyectos **sin líneas divisoras**.
+  - **Tags (tipo):** el campo "Tipo" de Sanity se separa por comas y cada tag es una pieza que no se parte (`.tag`, `white-space: nowrap`; la coma se queda con su tag). Siempre alineados a la derecha: si no caben en una línea, bajan enteros, uno debajo del otro, y todas las líneas terminan en el mismo borde derecho. La fecha nunca cede su ancho. Si el contenido de la lista mide menos de 340 px (ventanas de unos 900 a 1180 px, donde la columna 1 queda angosta), cada proyecto pasa a **dos filas**: fecha y, debajo, nombre a la izquierda; el bloque de tags ocupa las dos filas, anclado arriba y a la derecha, de modo que su primera línea queda a la altura de la fecha y, si hay más tags, bajan apilados por el costado del título (incluso rebasándolo). El nombre conserva su palabra más larga, nunca se parte ni se tapa, y la fecha y el nombre siempre quedan a 21 px uno del otro gracias a una tercera fila vacía y elástica que absorbe la altura extra (container query sobre `.portfolio-list`). Con más ancho o en una sola columna vuelve a una fila.
   - Cada fila tiene tres columnas: **fecha de conclusión** (116 px, formato `Mayo 2026`), nombre (16 px) y tipo (13 px).
   - **Orden:** por fecha de conclusión, del más reciente al más antiguo. Se ordena en el código a partir de `year` y `month`; nunca se numeran.
-  - Al fondo de la columna va una nota pequeña: "Web · Editorial · Fotografía".
+  - Al fondo de la columna va una nota pequeña: "Web · Editorial".
 - **Columnas 2 y 3, media.** Muestran la imagen del proyecto seleccionado, alineada **abajo a la izquierda**. Mide el 61.8 % del ancho, con proporción 1.618 : 1 y mínimo de 280 px. Debajo van el nombre (Baskervville 26) y una descripción (13 px).
 - **Interacción:** al pasar el cursor o hacer clic en una fila, cambia la imagen. La fila activa va en `ink-strong` y las demás en `ink-display`, y se marca con `aria-current="true"`.
   - **Enlaces:** cada proyecto tiene un campo opcional "URL del proyecto" en Sanity. Con URL, la fila es un `<a>` (la fila completa), y la imagen y el nombre bajo la imagen también llevan a esa liga; todos abren en pestaña nueva (`target="_blank"`, `rel="noopener noreferrer"`). El enlace de la imagen duplica el del nombre, por eso va con `tabindex="-1"` y `aria-hidden`. Sin URL, la fila es un `<button>` y no hay enlaces. En táctil (`(hover: none)`), el primer toque en una fila con URL solo la selecciona (vista previa) y el segundo toque, sobre la fila ya activa, navega; la imagen y el nombre bajo la imagen navegan desde el primer toque. Con cursor se selecciona al pasar y se navega al hacer clic; con teclado, al enfocar (`:focus-visible`).
@@ -140,12 +142,12 @@ El texto siempre va en gris, nunca en negro.
 | Clínica quiropráctica | Astro, Componentes | Septiembre 2026 | Sitio web demo para clínica quiropráctica |
 | Privateclub | Eleventy, Nunjucks | Agosto 2026 | Blog de música con estética de Windows 95 |
 
-La columna "Tipo" ahora lista tecnologías, no categorías (antes: Demo, Shopify, Editorial, Foto). Sin imagen, cada proyecto muestra el placeholder `[imagen]`.
+La columna "Tipo" ahora lista tecnologías, no categorías (antes: Demo, Shopify, Editorial, Foto). La entrada "Fotografía" del prototipo ya no existe. Sin imagen, cada proyecto muestra el placeholder `[imagen]`.
 
 ### 3. Contacto (`#contact`)
 
 - Etiqueta `02 — Contacto`.
-- Texto: "¿Tienes un proyecto, una marca que necesita sitio o una sesión de fotos? Escríbeme y platicamos."
+- Texto: "¿Tienes un proyecto o una marca que necesita sitio? Escríbeme y platicamos."
 - "[tu correo]" es un campo donde el **visitante** escribe su correo (no el de Sergio): serif 42/55 con hairline debajo, el ancho sigue al texto. Cuando el correo es válido (`algo@dominio.xx`, mínimo 2 letras tras el punto) aparece el botón "Continuar" con la estética del header flotante (`surface-raised`, borde `line`, radio 8 px, misma sombra; excepción pedida por Sergio). Al pulsarlo se abre un `<dialog>` modal con la misma estética (fondo desenfocado, entrada de 260 ms con fade y `translateY`; respeta `prefers-reduced-motion`). Contenido, de arriba abajo: correo ya escrito (serif 26/34, editable), Nombre completo (obligatorio), Mensaje (opcional, máx. 250 caracteres con contador, placeholder "Cuéntame qué tienes en mente."), botones Cancelar y Enviar. Se cierra con Esc, clic en el fondo, la × o Cancelar. El `POST` va a `/api/contact` (JSON `{ email, name, message, website }`; `website` es un honeypot anti-bots). Estados: "Enviando…", "No se pudo enviar. Intenta de nuevo." y, al enviar, una confirmación dentro del mismo diálogo: etiqueta "MENSAJE ENVIADO", título serif "Listo, {primer nombre}." (42/55; 26/34 en móvil), "Te respondo a {correo} lo antes posible." y un único botón "Ver portafolio" que cierra el diálogo y baja a `#portafolio` (sin la × ni un "Cerrar" aparte, para que no haya dos controles con la misma acción; Esc y el clic en el fondo siguen cerrando). El panel cambia de altura con transición y el foco pasa a ese botón; un `aria-live` oculto anuncia el mensaje. Al cerrar tras un envío se limpian el formulario y el campo de la página.
 - El envío lo atiende `/api/contact` (ver "Stack y contenido"). Si falta el secreto `MAIL_TO` en Cloudflare, el formulario responde error.
 - El campo "correo" de "Ajustes del sitio" ya no se muestra en Contacto; queda disponible como destinatario de los avisos.
@@ -154,8 +156,9 @@ La columna "Tipo" ahora lista tecnologías, no categorías (antes: Demo, Shopify
 ### 4. Acerca (`#about`)
 
 - Etiqueta `03 — Acerca`.
-- Dos párrafos sobre Sergio: Product Analyst que diseña y desarrolla sitios y tiendas a la medida, y checodotcom como el lugar que reúne ese trabajo y su fotografía.
-- Debajo, una cuadrícula de 3 × 2 separada por una hairline, para mostrar el recorrido full stack: Diseño (Web · UX/UI), Desarrollo (Astro · Eleventy · JS · Node · APIs), Foto (Retrato · Calle), Contenido (Sanity · Shopify), Infraestructura (Cloudflare · Git · DNS) y Medición (Analítica de producto). Sergio puede afinar las herramientas de Medición.
+- Dos párrafos sobre Sergio. El primero: "Soy Sergio. Hago análisis de producto. Diseño y desarrollo sitios, tiendas y herramientas únicas: interfaces editoriales medidas con datos para asegurarme de que funcionan." (su ventaja es medir y cuantificar que el producto sea bueno; no afirmar cifras concretas sin datos). El segundo: "checodotcom reúne una selección de ese trabajo. Si algo se parece a lo que buscas, escríbeme." (no repetir "a la medida" ni "editoriales", que ya están en el primero).
+- Aire de la sección: 21 px entre los dos párrafos, 55 px hasta la hairline, 34 px entre la hairline y la cuadrícula y entre sus filas (21 px entre columnas); el padding de la sección sigue en 89 px como las demás. La cuadrícula usa `auto-fit` con mínimo de 160 px por celda: 3 columnas en escritorio ancho y 2 en anchos medios y móvil, para que las listas no se partan mal ("Tag Manager" va con espacio sin salto).
+- Debajo, una cuadrícula separada por una hairline, para mostrar el recorrido full stack: Diseño (Web · UX/UI), Desarrollo (Astro · Eleventy · JS · Node · APIs), Contenido (Sanity · Shopify), Infraestructura (Cloudflare · Git · DNS) y Medición (GA4 · Tag Manager · SQL: las herramientas que Sergio usa de verdad; no añadir otras sin confirmarlo); la segunda fila queda con dos celdas.
 
 ### Footer
 
@@ -173,6 +176,16 @@ La columna "Tipo" ahora lista tecnologías, no categorías (antes: Demo, Shopify
 
 ---
 
+## Fotografía (pausada)
+
+Se quitó todo lo relacionado con fotografía el 7 de octubre de 2026. Al reincorporarla, restaurar:
+
+- Contacto: "…o una sesión de fotos" en el texto de invitación.
+- Acerca: "y mi fotografía" en el segundo párrafo, y la celda **Foto** (Retrato · Calle) de la cuadrícula.
+- Portafolio: "Fotografía" en la nota de la lista ("Web · Editorial · Fotografía") y, si aplica, una entrada de tipo Foto con su placeholder `[fotografía]`.
+- Descripción del `<head>` (`Base.astro`): "…y fotografía".
+- El prototipo original (PDF "Landing") sigue siendo la referencia de cómo se veía.
+
 ## Pendientes
 
 - [ ] Imágenes reales de cada proyecto (hoy son placeholders).
@@ -183,7 +196,7 @@ La columna "Tipo" ahora lista tecnologías, no categorías (antes: Demo, Shopify
 - [x] Formulario de contacto conectado y probado de punta a punta (el aviso llega al Gmail de Sergio).
 - [ ] Opcional: protección extra contra bots (Cloudflare Turnstile o una regla de rate limiting en WAF).
 - [ ] Publicar el documento "Ajustes del sitio" en Sanity (correo y redes); hoy la API no lo devuelve.
-- [ ] Decidir si la nota de la lista ("Web · Editorial · Fotografía") y el copy de Acerca siguen vigentes ahora que el portafolio lista tecnologías y no incluye fotografía.
+- [ ] Incorporar la fotografía más adelante (ver "Fotografía (pausada)").
 - [x] Hosting en Cloudflare Pages, webhook de rebuild desde Sanity y CORS de producción.
 - [x] Definir el stack de producción: Astro + Sanity (ver "Stack y contenido").
 - [ ] Decidir si cada proyecto tendrá su propia página de detalle.
