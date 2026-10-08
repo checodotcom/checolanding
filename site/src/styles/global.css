@@ -155,17 +155,19 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 
 /* ——— header flotante ——— */
 
+/* Tres zonas: menú (izquierda) · logo (centro, centrado de verdad) · botón de contacto (derecha). */
 .float-header {
   position: fixed;
   top: var(--s-13);
   left: var(--margin);
   right: var(--margin);
   z-index: 10;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--s-21);
-  padding: 0 var(--s-21);
+  gap: var(--s-13);
+  min-height: 52px;
+  padding: var(--s-5) var(--s-8);
   background: var(--surface-raised);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -180,24 +182,96 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   transition: transform 260ms ease, opacity 260ms ease, visibility 0s linear 260ms;
 }
 
-.float-header nav { display: flex; gap: var(--s-34); }
+.float-header .logo:hover { color: var(--ink-strong); }
 
-.float-header nav a {
-  padding: var(--s-13) 0;
+/* Menú hamburguesa simplificado: dos rayas finas que se cruzan en una × al abrir. */
+.menu-toggle {
+  justify-self: start;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
   color: var(--ink-muted);
 }
-.float-header nav a:hover { color: var(--ink-strong); }
-.float-header .logo:hover { color: var(--ink-strong); }
+.menu-toggle:hover { color: var(--ink-strong); }
+.menu-lines { position: relative; display: block; width: 18px; height: 8px; }
+.menu-lines span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  background: currentColor;
+  border-radius: 1px;
+  transition: top 260ms ease, transform 260ms ease;
+}
+.menu-lines span:nth-child(1) { top: 0; }
+.menu-lines span:nth-child(2) { top: 6.5px; }
+.menu-toggle[aria-expanded="true"] .menu-lines span:nth-child(1) { top: 3.25px; transform: rotate(45deg); }
+.menu-toggle[aria-expanded="true"] .menu-lines span:nth-child(2) { top: 3.25px; transform: rotate(-45deg); }
+
+/* Botón de contacto: abre el formulario. */
+.header-contact {
+  justify-self: end;
+  min-height: 44px;
+  padding: var(--s-8) var(--s-21);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font: 400 16px/26px var(--sans);
+  color: var(--ink-muted);
+  transition: color 160ms ease, border-color 160ms ease;
+}
+.header-contact:hover { color: var(--ink-strong); border-color: var(--ink-display); }
+
+/* Desplegable de vidrio opaco: casi opaco, con un desenfoque suave del fondo. Se despliega hacia abajo
+   (la altura crece de 0 a su tamaño) con un fundido, y se pliega igual al cerrar. */
+.menu {
+  position: absolute;
+  top: calc(100% + var(--s-8));
+  left: 0;
+  width: min(272px, 100%);
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  background: rgba(251, 251, 250, .88);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(38, 38, 38, .04), 0 8px 34px rgba(38, 38, 38, .06);
+  overflow: hidden;
+  transition: grid-template-rows 340ms cubic-bezier(.2, .7, .2, 1), opacity 220ms ease, visibility 0s linear 340ms;
+}
+.menu.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition: grid-template-rows 340ms cubic-bezier(.2, .7, .2, 1), opacity 220ms ease, visibility 0s linear 0s;
+}
+.menu-clip { min-height: 0; overflow: hidden; }
+.menu-list { padding: var(--s-8); }
+.menu-list a {
+  display: block;
+  padding: var(--s-8) var(--s-13);
+  min-height: 44px;
+  color: var(--ink-muted);
+  transition: color 160ms ease;
+}
+.menu-list a:hover { color: var(--ink-strong); }
 
 @media (prefers-reduced-motion: reduce) {
   .float-header,
-  .float-header[aria-hidden="true"] { transition: none; }
+  .float-header[aria-hidden="true"],
+  .menu,
+  .menu.is-open,
+  .menu-lines span,
+  .header-contact,
+  .menu-list a { transition: none; }
 }
 
 @media (max-width: 720px) {
-  .float-header { padding: 0 var(--s-13); gap: var(--s-13); }
   .float-header .logo { font-size: 16px; line-height: 26px; }
-  .float-header nav { gap: var(--s-13); }
+  .header-contact { padding: var(--s-8) var(--s-13); }
 }
 
 /* ——— secciones ——— */
@@ -243,45 +317,49 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 
 .project {
   display: grid;
-  /* fecha fija · nombre flexible · tags al ancho de su texto pero sin salirse de la fila */
-  grid-template-columns: 116px minmax(min-content, 1fr) minmax(0, max-content);
-  align-items: baseline;
+  /* Diseño por defecto (teléfonos y listas angostas): arriba la fecha; debajo el nombre, con todo el ancho
+     para no partirse. El bloque de tags ocupa las dos filas, anclado arriba y a la derecha: su primera línea
+     queda a la altura de la fecha y, si hay más tags, bajan por el costado del título (incluso rebasándolo). */
+  grid-template-columns: minmax(min-content, 1fr) minmax(0, max-content);
+  /* Una tercera fila vacía y elástica absorbe la altura extra de los tags: así la fecha y el nombre
+     siempre quedan juntos arriba, sin separarse cuando el bloque de tags crece. */
+  grid-template-areas: "date type" "name type" ". type";
+  grid-template-rows: auto auto 1fr;
+  align-items: start;
   column-gap: var(--s-13);
   width: 100%;
   padding: var(--s-5) 0;
   min-height: 44px;
   color: var(--ink-display);
 }
-.project .date { font-size: 13px; line-height: 21px; font-variant-numeric: tabular-nums; }
-.project .name { font-size: 16px; line-height: 34px; overflow-wrap: break-word; }
-.project .type { font-size: 13px; line-height: 21px; justify-self: end; text-align: right; }
+.project .date { grid-area: date; font-size: 13px; line-height: 21px; font-variant-numeric: tabular-nums; }
+.project .name { grid-area: name; font-size: 16px; line-height: 26px; overflow-wrap: break-word; }
+.project .type { grid-area: type; align-self: start; font-size: 13px; line-height: 21px; justify-self: end; text-align: right; }
 .project .tag { display: inline-block; white-space: nowrap; } /* cada tag es una pieza: si no cabe, baja entero */
 .project[aria-current="true"] { color: var(--ink-strong); }
 a.project:hover .name { text-decoration: underline; text-underline-offset: 3px; }
 
-/* Lista angosta (entre ~900 y ~1180 px de ventana): fecha arriba; nombre y tags en la línea de abajo,
-   para que nada se encime ni se parta letra por letra. En una sola columna (≤ 900 px) o con la lista
-   ancha vuelve a ser una fila. */
-@container (max-width: 340px) {
-  .project {
-    /* El bloque de tags ocupa las dos filas, anclado arriba y a la derecha: su primera línea queda a la
-       altura de la fecha, y si hay más tags bajan por el costado del título (incluso rebasándolo).
-       El nombre conserva su palabra más larga, así que nunca se parte ni se tapa. */
-    grid-template-columns: minmax(min-content, 1fr) minmax(0, max-content);
-    /* Una tercera fila vacía y elástica absorbe la altura extra de los tags: así la fecha y el nombre
-       siempre quedan juntos arriba, sin separarse cuando el bloque de tags crece. */
-    grid-template-areas: "date type" "name type" ". type";
-    grid-template-rows: auto auto 1fr;
-    align-items: start;
+/* Una sola fila (fecha · nombre · tags) solo cuando hay sitio: ventana de más de 480 px Y lista de más de
+   340 px. Así en todos los teléfonos el nombre ocupa su propia línea ("Clínica quiropráctica" ya no se parte). */
+@media (min-width: 481px) {
+  @container (min-width: 341px) {
+    .project {
+      grid-template-columns: 116px minmax(min-content, 1fr) minmax(0, max-content);
+      grid-template-areas: none;
+      grid-template-rows: none;
+      align-items: baseline;
+    }
+    .project .date,
+    .project .name,
+    .project .type { grid-area: auto; align-self: auto; }
+    .project .name { line-height: 34px; }
   }
-  .project .date { grid-area: date; }
-  .project .type { grid-area: type; align-self: start; }
-  .project .name { grid-area: name; line-height: 26px; }
 }
 
-.portfolio-note { margin-top: auto; padding-bottom: var(--s-34); }
-
 .portfolio-media {
+  /* Al desplazarse hasta la vista previa (primer toque en móvil) deja 89 px libres arriba y abajo: ni bajo el
+     header flotante ni bajo la barra del navegador del teléfono. */
+  scroll-margin: var(--s-89) 0;
   grid-column: 2 / 4;
   display: flex;
   flex-direction: column;
@@ -325,7 +403,6 @@ a.project:hover .name { text-decoration: underline; text-underline-offset: 3px; 
   .portfolio { min-height: 0; }
   .portfolio-grid { grid-template-columns: 1fr; row-gap: var(--s-34); }
   .portfolio-list { border-right: 0; padding-right: 0; }
-  .portfolio-note { margin-top: var(--s-21); padding-bottom: 0; }
   .portfolio-media { grid-column: 1; }
   .media-link { width: 100%; min-width: 0; }
 }

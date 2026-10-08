@@ -1,26 +1,78 @@
 <!-- Oculto en el hero; aparece cuando Portafolio llega a ≤ 89 px del borde superior. -->
 <header class="float-header" id="float-header" aria-hidden="true">
+  <button
+    class="menu-toggle"
+    id="menu-toggle"
+    type="button"
+    aria-expanded="false"
+    aria-controls="menu-panel"
+    aria-label="Abrir menú"
+    tabindex="-1"
+  >
+    <span class="menu-lines" aria-hidden="true"><span></span><span></span></span>
+  </button>
+
   <a class="logo" href="#inicio" tabindex="-1">checodotcom</a>
-  <nav aria-label="Principal">
-    <a href="#portafolio" tabindex="-1">Portafolio</a>
-    <a href="#contact" tabindex="-1">Contacto</a>
-    <a href="#about" tabindex="-1">Acerca</a>
+
+  <!-- Abre el formulario de contacto (lo maneja Contact.astro). Desde aquí el visitante aún no escribió su correo. -->
+  <button class="header-contact" type="button" data-open-contact tabindex="-1">Contacto</button>
+
+  <nav class="menu" id="menu-panel" aria-label="Principal">
+    <div class="menu-clip">
+      <ul class="menu-list">
+        <li><a href="#inicio" tabindex="-1">Inicio</a></li>
+        <li><a href="#portafolio" tabindex="-1">Portafolio</a></li>
+        <li><a href="#about" tabindex="-1">Acerca</a></li>
+      </ul>
+    </div>
   </nav>
 </header>
 
 <script>
   const header = document.getElementById("float-header")!;
   const portfolio = document.getElementById("portafolio")!;
-  const links = header.querySelectorAll("a");
+  const toggle = document.getElementById("menu-toggle") as HTMLButtonElement;
+  const menu = document.getElementById("menu-panel")!;
+  const controls = header.querySelectorAll<HTMLElement>("a, button");
   let visible: boolean | null = null;
+  let open = false;
+
+  function setMenu(next: boolean, viaKeyboard = false) {
+    if (next === open) return;
+    open = next;
+    menu.classList.toggle("is-open", open);
+    toggle.setAttribute("aria-expanded", String(open));
+    toggle.setAttribute("aria-label", open ? "Cerrar menú" : "Abrir menú");
+    // Solo con teclado el foco pasa al primer enlace: con el ratón o el dedo no hace falta.
+    if (open && viaKeyboard) menu.querySelector<HTMLElement>("a")?.focus({ preventScroll: true });
+  }
 
   function update() {
     const show = portfolio.getBoundingClientRect().top <= 89;
+    if (!show && open) setMenu(false); // cinturón y tirantes: con el header oculto el menú nunca queda abierto
     if (show === visible) return;
     visible = show;
     header.setAttribute("aria-hidden", String(!show));
-    links.forEach((a) => (show ? a.removeAttribute("tabindex") : a.setAttribute("tabindex", "-1")));
+    controls.forEach((el) => (show ? el.removeAttribute("tabindex") : el.setAttribute("tabindex", "-1")));
+    if (!show) setMenu(false); // si el header se oculta, el menú no se queda abierto
   }
+
+  toggle.addEventListener("click", (e) => setMenu(!open, (e as MouseEvent).detail === 0));
+  menu.addEventListener("click", (e) => {
+    if ((e.target as HTMLElement).closest("a")) setMenu(false); // tocar un enlace cierra el menú
+  });
+  header.querySelector("[data-open-contact]")!.addEventListener("click", () => setMenu(false));
+
+  // Fuera del header o con Esc se cierra; con Esc el foco vuelve al botón.
+  document.addEventListener("click", (e) => {
+    if (open && !header.contains(e.target as Node)) setMenu(false);
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && open) {
+      setMenu(false);
+      toggle.focus();
+    }
+  });
 
   window.addEventListener("scroll", update, { passive: true });
   window.addEventListener("resize", update);

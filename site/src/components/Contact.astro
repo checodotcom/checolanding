@@ -48,7 +48,7 @@ const PLACEHOLDER = "[tu correo]";
     <form class="modal-form" id="lead-dialog-form" novalidate>
       <label class="field">
         <span class="label">Tu correo</span>
-        <input class="field-email" type="email" name="email" autocomplete="email" inputmode="email" spellcheck="false" autocapitalize="off" required />
+        <input class="field-email" type="email" name="email" placeholder="tu@correo.com" autocomplete="email" inputmode="email" spellcheck="false" autocapitalize="off" required />
       </label>
 
       <label class="field">
@@ -170,8 +170,13 @@ const PLACEHOLDER = "[tu correo]";
     setTimeout(() => (panel.style.height = ""), 300);
   }
 
-  function openDialog() {
-    dEmail.value = input.value.trim();
+  // Desde el campo de la página el correo ya viene escrito; desde el botón del header llega vacío (el
+  // visitante todavía no lo había escrito) y el foco cae primero en ese campo.
+  let fromPage = true;
+
+  function openDialog(email: string, page = true) {
+    fromPage = page;
+    dEmail.value = email;
     panel.classList.remove("is-done");
     panel.style.height = "";
     dForm.hidden = false;
@@ -179,7 +184,7 @@ const PLACEHOLDER = "[tu correo]";
     dStatus.textContent = "";
     dialog.showModal();
     requestAnimationFrame(() => dialog.classList.add("is-open"));
-    (dName.value ? dMessage : dName).focus();
+    (!dEmail.value ? dEmail : dName.value ? dMessage : dName).focus();
   }
 
   function closeDialog(afterClose?: () => void) {
@@ -195,7 +200,7 @@ const PLACEHOLDER = "[tu correo]";
         dCount.textContent = "0";
         input.value = "";
         sync();
-      } else {
+      } else if (fromPage) {
         input.value = dEmail.value.trim() || input.value;
         sync();
       }
@@ -209,8 +214,13 @@ const PLACEHOLDER = "[tu correo]";
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
-    if (VALID.test(input.value.trim())) openDialog();
+    if (VALID.test(input.value.trim())) openDialog(input.value.trim());
   });
+
+  // Botones "Contacto" fuera de esta sección (el del header flotante): abren el mismo formulario.
+  document.querySelectorAll("[data-open-contact]").forEach((b) =>
+    b.addEventListener("click", () => openDialog(VALID.test(input.value.trim()) ? input.value.trim() : "", false)),
+  );
 
   dialog.addEventListener("cancel", (e) => {
     e.preventDefault(); // Esc: se cierra con animación

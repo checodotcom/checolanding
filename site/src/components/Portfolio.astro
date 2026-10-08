@@ -48,7 +48,6 @@ const tags = (type: string) => {
           })
         }
       </ul>
-      <p class="small portfolio-note">Web · Editorial</p>
     </div>
 
     <div class="portfolio-media" aria-live="polite">
@@ -121,6 +120,17 @@ const tags = (type: string) => {
   // fila ya activa, navega. Los toques también disparan mouseenter y focus, así que esos dos
   // solo seleccionan con cursor real y con teclado, para no navegar al primer toque.
   const noHover = window.matchMedia("(hover: none)");
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const media = document.querySelector<HTMLElement>(".portfolio-media")!;
+
+  // En una sola columna la vista previa queda debajo de la lista, a veces fuera de pantalla: tras el
+  // primer toque se desplaza con suavidad lo justo para que la imagen y su pie se vean completos.
+  function revealPreview() {
+    const r = media.getBoundingClientRect();
+    const m = parseFloat(getComputedStyle(media).scrollMarginBottom) || 0;
+    if (r.top >= m && r.bottom <= window.innerHeight - m) return; // ya se ve entera, con su margen
+    media.scrollIntoView({ behavior: reduceMotion.matches ? "auto" : "smooth", block: "nearest" });
+  }
 
   items.forEach((el) => {
     el.addEventListener("mouseenter", () => {
@@ -133,6 +143,7 @@ const tags = (type: string) => {
       const active = el.getAttribute("aria-current") === "true";
       if (noHover.matches && el instanceof HTMLAnchorElement && !active) e.preventDefault();
       show(el);
+      if (noHover.matches && !active) revealPreview();
     });
   });
 </script>
