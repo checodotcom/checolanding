@@ -8,10 +8,14 @@
 </section>
 
 <script>
-  // El menú entra 1,5 s después de que la página cargó por completo (recursos y tipografías).
+  // 1) El wordmark entra (400 ms) en cuanto la tipografía está lista.
+  // 2) El menú entra 1,5 s después de que la página cargó por completo (recursos y tipografías).
+  const wordmark = document.querySelector(".wordmark");
   const nav = document.querySelector(".hero-nav");
   const loaded = new Promise<void>((resolve) =>
     document.readyState === "complete" ? resolve() : window.addEventListener("load", () => resolve(), { once: true }),
   );
+
+  document.fonts.ready.then(() => requestAnimationFrame(() => wordmark?.classList.add("is-ready")));
   Promise.all([loaded, document.fonts.ready]).then(() => setTimeout(() => nav?.classList.add("is-ready"), 1500));
 </script>

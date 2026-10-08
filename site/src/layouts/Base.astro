@@ -31,5 +31,26 @@ const {
   </head>
   <body>
     <slot />
+    <script>
+      // Muestra cada [data-reveal] cuando entra en pantalla (una sola vez). Si el navegador no
+      // soporta IntersectionObserver, se muestra todo de inmediato.
+      const items = document.querySelectorAll<HTMLElement>("[data-reveal]");
+      if (!("IntersectionObserver" in window)) {
+        items.forEach((el) => el.classList.add("is-visible"));
+      } else {
+        const io = new IntersectionObserver(
+          (entries) =>
+            entries.forEach((e) => {
+              if (!e.isIntersecting) return;
+              e.target.classList.add("is-visible");
+              io.unobserve(e.target);
+            }),
+          // Aparece cuando asoma 34 px por encima del borde inferior. Un margen fijo (no un %) para que
+          // el pie, que es lo último de la página y nunca sube más, también llegue a activarse.
+          { rootMargin: "0px 0px -34px 0px" },
+        );
+        items.forEach((el) => io.observe(el));
+      }
+    </script>
   </body>
 </html>

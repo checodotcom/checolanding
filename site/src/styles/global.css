@@ -108,6 +108,13 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 
 .hero-nav a:hover { color: var(--ink-strong); }
 
+/* Entrada del wordmark: fundido puro de 600 ms, sin dirección ni desplazamiento. Arranca cuando la
+   tipografía ya está lista (así no se ve el cambio de fuente). Sin JS se muestra de inmediato. */
+.wordmark { opacity: 0; }
+.wordmark.is-ready { opacity: 1; transition: opacity 600ms ease; }
+@media (scripting: none) { .wordmark { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .wordmark.is-ready { transition: none; } }
+
 /* Entrada: el menú aparece 1,5 s después de que la página cargó por completo (ver Hero.astro).
    Mientras tanto ocupa su sitio pero no se ve ni recibe foco (visibility), y sin JS se muestra. */
 .hero-nav { opacity: 0; visibility: hidden; }
@@ -589,3 +596,12 @@ body:has(dialog[open]) { overflow: hidden; }
   border-top: 1px solid var(--line);
 }
 .footer .logo:hover { color: var(--ink-strong); }
+
+/* ——— aparición al hacer scroll ——— */
+
+/* Cada bloque marcado con data-reveal entra con un fundido puro de 600 ms (sin dirección) cuando
+   llega a la pantalla. Las hairlines entre secciones no se animan. Sin JS se muestra todo. */
+[data-reveal] { opacity: 0; }
+[data-reveal].is-visible { opacity: 1; transition: opacity 600ms ease; }
+@media (scripting: none) { [data-reveal] { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { [data-reveal].is-visible { transition: none; } }
