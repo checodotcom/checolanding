@@ -6,3 +6,12 @@
     <a href="#about">Acerca</a>
   </nav>
 </section>
+
+<script>
+  // El menú entra 1,5 s después de que la página cargó por completo (recursos y tipografías).
+  const nav = document.querySelector(".hero-nav");
+  const loaded = new Promise<void>((resolve) =>
+    document.readyState === "complete" ? resolve() : window.addEventListener("load", () => resolve(), { once: true }),
+  );
+  Promise.all([loaded, document.fonts.ready]).then(() => setTimeout(() => nav?.classList.add("is-ready"), 1500));
+</script>

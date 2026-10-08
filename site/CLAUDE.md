@@ -23,7 +23,7 @@ Sitio personal de Sergio (alias web **checodotcom**): portafolio de diseño web 
 - **Lista de contactos (D1):** cada envío válido se guarda en la base D1 `checodotcom-contactos` (binding `DB`, tabla `contactos`: `id`, `creado_en` en **hora de Ciudad de México** (la calcula el Worker con la zona `America/Mexico_City`; la migración `0002` convirtió las filas viejas, que estaban en UTC), `nombre`, `correo`, `mensaje`, `estado` ∈ `nuevo` | `respondido` | `descartado`). Solo se guarda lo que el visitante escribe; no hay IP. El Worker **guarda primero y avisa por correo después**; responde error solo si fallan las dos cosas. Se consulta en el panel (D1 → checodotcom-contactos → Console): `SELECT * FROM contactos ORDER BY id DESC;` y se marca con `UPDATE contactos SET estado = 'respondido' WHERE id = N;`. El esquema vive en `migrations/`; cada migración nueva se aplica a la base real **antes** de desplegar el código que la usa: `npx wrangler d1 migrations apply checodotcom-contactos --remote`. En local: la misma orden con `--local`.
 - **Correo de aviso:** `worker/email-template.ts` genera un `multipart/alternative` (texto + HTML con estilos en línea y tablas, paleta del sitio; Georgia y la sans del sistema sustituyen a Baskervville e Inter, que no existen en el correo). Lleva marca, "Nuevo contacto", nombre, correo, mensaje, botón "Responder" (mailto) y pie con n.º de contacto y hora de México. Todo lo que escribe el visitante se escapa antes de entrar al HTML. El asunto sigue siendo `Contacto: {nombre}` (útil para el filtro de Gmail).
 - **Campo de correo de la página:** la caja y su hairline miden siempre lo mismo que "[tu correo]" y no se mueven (tampoco el botón ni las redes). El `<input>` va anclado al borde derecho de la caja: si el correo es más largo crece hacia la izquierda por el espacio libre de la página (hasta el margen de 34 px); si aun así no cabe, la letra baja un paso de la escala (42 → 26 → 16) y solo como último recurso el texto se desplaza por dentro. En ≤ 720 px no hay espacio a la izquierda: la caja ocupa el ancho de la columna y se aplica la misma reducción de letra. La lógica está en `fit()` de `Contact.astro`; el anillo de foco va en el `<input>`.
-- **Formulario en la página:** el botón Continuar tiene su sitio reservado (`visibility: hidden`; en estrecho tiene su propia fila y en ancho nunca baja de línea), así que al aparecer no empuja el bloque de redes.
+- **Formulario en la página:** en móvil el botón Continuar va **centrado** horizontalmente bajo el campo (en escritorio, a la derecha de la línea). El botón Continuar tiene su sitio reservado (`visibility: hidden`; en estrecho tiene su propia fila y en ancho nunca baja de línea), así que al aparecer no empuja el bloque de redes.
 - **Email Routing:** activo en `checodot.com` (MX `route1/2/3.mx.cloudflare.net`, SPF y DKIM de Cloudflare). Regla `contacto@checodot.com` → Gmail de Sergio; catch-all apagado. DMARC en `p=none`.
 - **Flujo de contenido:** al publicar en Sanity, un webhook (filtro `_type in ["project","siteSettings"]`, solo documentos publicados) llama al deploy hook de Cloudflare y el sitio se reconstruye solo. La URL del deploy hook es secreta: vive solo en Sanity, nunca en el repo.
 - **CORS en Sanity:** cada origen necesita **Allow credentials** o el Studio muestra "Not Allowed". Autorizados: `http://localhost:4373` y `https://checodot.com`. Si se agrega otro dominio, repetirlo ahí.
@@ -107,7 +107,8 @@ El texto siempre va en gris, nunca en negro.
 - El alto mínimo es de 860 px. El contenido va pegado abajo (`justify-content: flex-end`).
 - "checodotcom" va abajo a la izquierda, en una línea.
 - El nav (Portafolio, Contacto, Acerca) va apilado a la derecha del wordmark, alineado a su línea base (`align-items: last baseline`), con un gap de 34 px.
-- En móvil el nav va apilado arriba a la derecha (16/26, a `13px` del borde superior y al margen derecho) y el wordmark queda abajo a la izquierda. El hero mide `100svh` en lugar de 860 px, para que el wordmark no quede cortado bajo el pliegue.
+- En móvil el nav va apilado y **centrado en el centro de la pantalla** (16/26, centrado en ambos ejes y con el texto centrado) y el wordmark queda abajo a la izquierda. El hero mide `100svh` en lugar de 860 px, para que el wordmark no quede cortado bajo el pliegue.
+- **Entrada del nav (todos los tamaños):** el nav aparece con un fundido de 600 ms, 1,5 s después de que la página cargó por completo (evento `load` y tipografías listas; ver `Hero.astro`). Hasta entonces ocupa su sitio pero está oculto (`opacity: 0`, `visibility: hidden`); sin JS (`@media (scripting: none)`) se muestra de inmediato, y con `prefers-reduced-motion` no hay fundido. En escritorio conserva su posición: a la derecha del wordmark, apilado, a 34 px y alineado a su línea base.
 
 ### Header flotante (aparece con el scroll)
 
@@ -133,7 +134,7 @@ El texto siempre va en gris, nunca en negro.
   - **Enlaces:** cada proyecto tiene un campo opcional "URL del proyecto" en Sanity. Con URL, la fila es un `<a>` (la fila completa), y la imagen y el nombre bajo la imagen también llevan a esa liga; todos abren en pestaña nueva (`target="_blank"`, `rel="noopener noreferrer"`). El enlace de la imagen duplica el del nombre, por eso va con `tabindex="-1"` y `aria-hidden`. Sin URL, la fila es un `<button>` y no hay enlaces. En táctil (`(hover: none)`), el primer toque en una fila con URL solo la selecciona (vista previa) y el segundo toque, sobre la fila ya activa, navega; la imagen y el nombre bajo la imagen navegan desde el primer toque. Con cursor se selecciona al pasar y se navega al hacer clic; con teclado, al enfocar (`:focus-visible`).
 - **Móvil (≤ 900 px):** una sola columna. Se quita el divisor y la imagen ocupa el 100 %.
 
-**Datos actuales** (los gestiona Sergio en Sanity; esto es una foto del 7 de octubre de 2026, las fechas siguen sin confirmar):
+**Datos actuales** (los gestiona Sergio en Sanity; foto del 7 de octubre de 2026; las fechas ya están confirmadas):
 
 | Proyecto | Tipo | Conclusión | Descripción |
 | --- | --- | --- | --- |
@@ -142,7 +143,7 @@ El texto siempre va en gris, nunca en negro.
 | Clínica quiropráctica | Astro, Componentes | Septiembre 2026 | Sitio web demo para clínica quiropráctica |
 | Privateclub | Eleventy, Nunjucks | Agosto 2026 | Blog de música con estética de Windows 95 |
 
-La columna "Tipo" ahora lista tecnologías, no categorías (antes: Demo, Shopify, Editorial, Foto). La entrada "Fotografía" del prototipo ya no existe. Sin imagen, cada proyecto muestra el placeholder `[imagen]`.
+La columna "Tipo" ahora lista tecnologías, no categorías (antes: Demo, Shopify, Editorial, Foto). La entrada "Fotografía" del prototipo ya no existe. Los 4 proyectos ya tienen imagen y URL publicadas en Sanity (Galena → galena.agency, Panoramica Store → panoramica.store, Clínica quiropráctica y Privateclub → sus demos en netlify.app). Un proyecto sin imagen muestra el placeholder `[imagen]`; sin URL, no genera enlaces.
 
 ### 3. Contacto (`#contact`)
 
@@ -188,9 +189,9 @@ Se quitó todo lo relacionado con fotografía el 7 de octubre de 2026. Al reinco
 
 ## Pendientes
 
-- [ ] Imágenes reales de cada proyecto (hoy son placeholders).
-- [ ] Confirmar las fechas de conclusión de los proyectos.
-- [ ] Correo de contacto y URLs de Instagram, GitHub y LinkedIn.
+- [x] Imágenes reales y URL de cada proyecto (publicadas en Sanity).
+- [x] Fechas de conclusión de los proyectos confirmadas.
+- [ ] Publicar "Ajustes del sitio" en Sanity con las URLs de Instagram, GitHub y LinkedIn (el correo de contacto ya no se muestra en el sitio). Mientras tanto, las redes salen de los valores por defecto de `src/data/settings.ts`.
 - [ ] Elegir el fondo definitivo (Hueso, Blanco o Niebla) y quitar los otros.
 - [ ] Actualizar el README del sistema de diseño con lo que cambió: la regla áurea, la escala nueva, el header flotante con sombra y radio de 8 px, y que los títulos de sección usan solo la etiqueta sans.
 - [x] Formulario de contacto conectado y probado de punta a punta (el aviso llega al Gmail de Sergio).
