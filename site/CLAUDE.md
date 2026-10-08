@@ -107,7 +107,7 @@ El texto siempre va en gris, nunca en negro.
 - El alto mínimo es de 860 px. El contenido va pegado abajo (`justify-content: flex-end`).
 - "checodotcom" va abajo a la izquierda, en una línea.
 - El nav (Portafolio, Contacto, Acerca) va apilado a la derecha del wordmark, alineado a su línea base (`align-items: last baseline`), con un gap de 34 px.
-- En móvil el nav va apilado y **centrado en el centro de la pantalla** (16/26, centrado en ambos ejes y con el texto centrado) y el wordmark queda abajo a la izquierda. El hero mide `100svh` en lugar de 860 px, para que el wordmark no quede cortado bajo el pliegue.
+- En móvil el nav va apilado y **centrado en horizontal y 55 px por encima del centro vertical** de la pantalla (16/26, texto centrado): el wordmark pesa abajo y, por peso visual, el nav se ve mejor un poco más alto y alejado de él y el wordmark queda abajo a la izquierda. El hero mide `100svh` en lugar de 860 px, para que el wordmark no quede cortado bajo el pliegue.
 - **Entrada del nav (todos los tamaños):** el nav aparece con un fundido de 600 ms, 1,5 s después de que la página cargó por completo (evento `load` y tipografías listas; ver `Hero.astro`). Hasta entonces ocupa su sitio pero está oculto (`opacity: 0`, `visibility: hidden`); sin JS (`@media (scripting: none)`) se muestra de inmediato, y con `prefers-reduced-motion` no hay fundido. En escritorio conserva su posición: a la derecha del wordmark, apilado, a 34 px y alineado a su línea base.
 
 ### Header flotante (aparece con el scroll)

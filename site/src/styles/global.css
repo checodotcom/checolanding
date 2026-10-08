@@ -127,9 +127,11 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   .hero { position: relative; min-height: 100svh; }
   .hero-nav {
     position: absolute;
-    top: 50%;
+    /* Centrado en horizontal; en vertical, 55 px por encima del centro exacto: el wordmark pesa abajo
+       y, por peso visual, el menú se ve mejor un poco más alto y alejado de él. */
+    top: calc(50% - var(--s-55));
     left: 50%;
-    transform: translate(-50%, -50%); /* centro de la pantalla, en los dos ejes */
+    transform: translate(-50%, -50%);
     align-items: center;
     text-align: center;
     font-size: 16px;
