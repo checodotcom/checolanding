@@ -33,7 +33,13 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  /* El mismo hueso en el <html> y en el <body>: el fondo que se ve al rebotar el scroll y en las
+     zonas seguras del iPhone (Dynamic Island, barra de estado, bordes en horizontal). */
+  background: var(--surface);
+  color-scheme: light;
+}
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
 body {
