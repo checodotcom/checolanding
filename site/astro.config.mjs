@@ -5,6 +5,10 @@ import sanity from "@sanity/astro";
 // Sitio estático. React solo lo usa el Studio de Sanity, que vive en /admin.
 // El projectId es público (no es un secreto).
 export default defineConfig({
+  // El CSS de la página va dentro del HTML (no en un archivo aparte): llega junto con el header y el
+  // resto del contenido, así el navegador nunca pinta la página sin estilos mientras espera el CSS
+  // (en móvil se veía un instante el header, que es lo primero del <body>, sin ocultar).
+  build: { inlineStylesheets: "always" },
   integrations: [
     sanity({
       projectId: "0yp7ue4b",

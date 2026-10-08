@@ -27,6 +27,7 @@ Sitio personal de Sergio (alias web **checodotcom**): portafolio de diseño web 
 - **Email Routing:** activo en `checodot.com` (MX `route1/2/3.mx.cloudflare.net`, SPF y DKIM de Cloudflare). Regla `contacto@checodot.com` → Gmail de Sergio; catch-all apagado. DMARC en `p=none`.
 - **Flujo de contenido:** al publicar en Sanity, un webhook (filtro `_type in ["project","siteSettings"]`, solo documentos publicados) llama al deploy hook de Cloudflare y el sitio se reconstruye solo. La URL del deploy hook es secreta: vive solo en Sanity, nunca en el repo.
 - **CORS en Sanity:** cada origen necesita **Allow credentials** o el Studio muestra "Not Allowed". Autorizados: `http://localhost:4373` y `https://checodot.com`. Si se agrega otro dominio, repetirlo ahí.
+- **CSS en línea (anti-destello):** `astro.config.mjs` usa `build.inlineStylesheets: "always"`, así el CSS de la página va dentro del HTML y no en un archivo aparte. Motivo: el header flotante es lo primero del `<body>`; si el navegador pintaba antes de tener el CSS (red móvil lenta, sobre todo Safari en iPhone), se veía un instante el header sin estilos. Con el CSS en el mismo envío, el header está oculto desde el primer fotograma. No volver a un `<link>` externo para el CSS de la página; el HTML de `/admin` crece (~190 KB) porque el CSS del Studio también queda en línea, y solo lo carga quien edita.
 - **Dependencia fijada:** `@sanity/ui` debe ir como dependencia directa en `^4`, porque `sanity@6` la necesita y la integración arrastra la 3.
 
 ---
