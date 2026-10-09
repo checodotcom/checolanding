@@ -17,6 +17,7 @@
     "@sanity/ui": "^4.3.3",
     "astro": "^7.3.6",
     "mimetext": "^3.0.28",
+    "posthog-js": "^1.438.3",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "sanity": "^6.18.0",
