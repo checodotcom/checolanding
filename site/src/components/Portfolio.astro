@@ -141,9 +141,17 @@ const tags = (type: string) => {
     });
     el.addEventListener("click", (e) => {
       const active = el.getAttribute("aria-current") === "true";
+      const opensProject = el instanceof HTMLAnchorElement && (!noHover.matches || active);
       if (noHover.matches && el instanceof HTMLAnchorElement && !active) e.preventDefault();
+      if (opensProject) window.posthog?.capture("portfolio_project_opened", { source: "list" });
       show(el);
       if (noHover.matches && !active) revealPreview();
     });
   });
+
+  [imageLink, titleLink].forEach((link) =>
+    link.addEventListener("click", () => {
+      if (link.hasAttribute("href")) window.posthog?.capture("portfolio_project_opened", { source: "preview" });
+    }),
+  );
 </script>

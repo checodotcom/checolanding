@@ -149,6 +149,12 @@ const PLACEHOLDER = "[tu correo]";
   const dCount = document.getElementById("lead-count")!;
   const dDone = document.getElementById("lead-done")!;
   const panel = dialog.querySelector<HTMLElement>(".modal-panel")!;
+  const contactLog = {
+    info: (body: string, attributes: Record<string, string> = {}) =>
+      window.posthog?.logger?.info(body, attributes),
+    warn: (body: string, attributes: Record<string, string> = {}) =>
+      window.posthog?.logger?.warn(body, attributes),
+  };
   let sent = false;
 
   function showDone(name: string, email: string) {
@@ -175,6 +181,9 @@ const PLACEHOLDER = "[tu correo]";
   let fromPage = true;
 
   function openDialog(email: string, page = true) {
+    const entrypoint = page ? "contact_section" : "floating_header";
+    window.posthog?.capture("contact_form_opened", { entrypoint });
+    contactLog.info("contact form opened", { entrypoint });
     fromPage = page;
     dEmail.value = email;
     panel.classList.remove("is-done");
@@ -268,9 +277,12 @@ const PLACEHOLDER = "[tu correo]";
         }),
       });
       if (!res.ok) throw new Error(String(res.status));
+      window.posthog?.capture("contact_form_submitted");
+      contactLog.info("contact form submitted");
       sent = true;
       showDone(dName.value.trim(), dEmail.value.trim());
     } catch {
+      contactLog.warn("contact form submission failed");
       dStatus.textContent = "No se pudo enviar. Intenta de nuevo.";
     } finally {
       dSend.disabled = false;
