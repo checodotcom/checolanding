@@ -1,3 +1,17 @@
+---
+const skills = [
+  ["Diseño", "Web · UX/UI"],
+  ["Desarrollo", "Astro · Eleventy · JS · Node · APIs"],
+  ["Contenido", "Sanity · Shopify"],
+  ["Infraestructura", "Cloudflare · Git · DNS"],
+  ["Medición", "PostHog · GA4 · Tag Manager"],
+];
+
+// El punto medio va pegado a la palabra anterior (espacio sin salto): si el texto se parte, la línea nueva
+// nunca empieza con "·". "Tag Manager" tampoco se separa.
+const glue = (t: string) => t.replaceAll("Tag Manager", "Tag Manager").replaceAll(" · ", " · ");
+---
+
 <section class="section" id="about" aria-labelledby="about-label">
   <div class="two-col" data-reveal>
     <h2 class="label" id="about-label">03 — Acerca</h2>
@@ -5,11 +19,7 @@
       <p>Soy Sergio. Hago análisis de producto. Diseño y desarrollo sitios, tiendas y herramientas únicas: interfaces editoriales medidas con datos para asegurarme de que funcionan.</p>
       <p>checodotcom reúne una selección de ese trabajo. Si algo se parece a lo que buscas, escríbeme.</p>
       <dl class="skills">
-        <div><dt class="label">Diseño</dt><dd class="small">Web · UX/UI</dd></div>
-        <div><dt class="label">Desarrollo</dt><dd class="small">Astro · Eleventy · JS · Node · APIs</dd></div>
-        <div><dt class="label">Contenido</dt><dd class="small">Sanity · Shopify</dd></div>
-        <div><dt class="label">Infraestructura</dt><dd class="small">Cloudflare · Git · DNS</dd></div>
-        <div><dt class="label">Medición</dt><dd class="small">GA4 · Tag&nbsp;Manager · SQL</dd></div>
+        {skills.map(([label, items]) => <div><dt class="label">{label}</dt><dd class="small">{glue(items)}</dd></div>)}
       </dl>
     </div>
   </div>
