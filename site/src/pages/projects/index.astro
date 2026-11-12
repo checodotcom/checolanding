@@ -5,3 +5,50 @@ const projects=await getProjects();
 <Page title="Portafolio"><Header title="Portafolio"/>{projects.map((p,i)=><a class="project-cover glass" href={`/projects/${projectSlug(p)}`}>
 {p.image ? <img src={p.image} alt={p.name} loading="lazy"/> : <div class="project-placeholder"><span>{p.type}</span><strong>{p.name}</strong></div>}
 <div class="cover-caption"><div><p class="small">{formatDate(p)}</p><h2>{p.name}</h2></div><span aria-hidden="true">↗</span></div></a>)}</Page>
+<script>
+ // Hover de las tarjetas: la tarjeta completa crece un poco y sigue al cursor, con inercia, sin salirse del
+ // viewport ni invadir el navbar (el dock de la derecha). Solo con cursor real y sin "reducir movimiento".
+ const fine = matchMedia('(hover: hover) and (pointer: fine)');
+ const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+ const SCALE = 1.04, MOVE = 18, GAP = 16;
+ if (fine.matches && !reduce.matches) {
+  document.querySelectorAll<HTMLElement>('.project-cover').forEach((card) => {
+   let x = 0, y = 0, s = 1, tx = 0, ty = 0, ts = 1, raf = 0;
+   const frame = () => {
+    x += (tx - x) * 0.14; y += (ty - y) * 0.14; s += (ts - s) * 0.14;
+    card.style.transform = `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) scale(${s.toFixed(4)})`;
+    const done = Math.abs(tx - x) < 0.05 && Math.abs(ty - y) < 0.05 && Math.abs(ts - s) < 0.0004;
+    if (done && ts === 1) { card.style.transform = ''; card.classList.remove('is-hot'); raf = 0; return; }
+    raf = done ? 0 : requestAnimationFrame(frame);
+   };
+   const kick = () => { if (!raf) raf = requestAnimationFrame(frame); };
+   // Límites en pantalla: izquierda y arriba/abajo del viewport, y a la derecha el borde del dock (si está a la vista).
+   const limits = (r: DOMRect) => {
+    const dock = document.querySelector<HTMLElement>('.dock');
+    const dr = dock && getComputedStyle(dock).visibility !== 'hidden' ? dock.getBoundingClientRect() : null;
+    const right = (dr && dr.left > innerWidth / 2 ? dr.left : innerWidth) - GAP;
+    const w = r.width / s, h = r.height / s;
+    const cx = r.left + r.width / 2 - x, cy = r.top + r.height / 2 - y;
+    const hw = (w * SCALE) / 2, hh = (h * SCALE) / 2;
+    // Solo frenan el desplazamiento hacia afuera: nunca empujan la tarjeta hacia adentro si ya estaba fuera
+    // (por ejemplo, una tarjeta alta a medio scroll).
+    const tall = h * SCALE > innerHeight - 2 * GAP;
+    return {
+     minX: Math.min(0, GAP - (cx - hw)), maxX: Math.max(0, right - (cx + hw)),
+     minY: tall ? -Infinity : Math.min(0, GAP - (cy - hh)),
+     maxY: tall ? Infinity : Math.max(0, innerHeight - GAP - (cy + hh)),
+    };
+   };
+   card.addEventListener('pointerenter', () => { card.classList.add('is-hot'); ts = SCALE; kick(); });
+   card.addEventListener('pointermove', (e) => {
+    const r = card.getBoundingClientRect();
+    const nx = ((e.clientX - r.left) / r.width - 0.5) * 2, ny = ((e.clientY - r.top) / r.height - 0.5) * 2;
+    const l = limits(r);
+    tx = Math.min(l.maxX, Math.max(l.minX, nx * MOVE));
+    ty = Math.min(l.maxY, Math.max(l.minY, ny * MOVE));
+    kick();
+   });
+   card.addEventListener('pointerleave', () => { tx = ty = 0; ts = 1; kick(); });
+  });
+ }
+</script>

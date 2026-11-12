@@ -637,10 +637,15 @@ h3 {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.45s;
 }
-.project-cover:hover > img {
-  transform: scale(1.03);
+/* Hover: crece la tarjeta completa (no la foto) y la mueve Projects.astro siguiendo al cursor. */
+.project-cover {
+  will-change: transform;
+  transition: box-shadow 0.4s ease;
+}
+.project-cover.is-hot {
+  z-index: 2;
+  box-shadow: 0 24px 60px rgba(38, 38, 38, 0.14);
 }
 .project-cover .project-placeholder {
   height: 100%;
