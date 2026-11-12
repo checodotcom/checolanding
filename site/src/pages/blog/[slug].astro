@@ -1,0 +1,5 @@
+---
+import Page from '../../layouts/PortfolioPage.astro';import Header from '../../components/PageHeader.astro';import {posts} from '../../data/posts';
+export function getStaticPaths(){return posts.map(post=>({params:{slug:post.slug},props:{post}}));}const {post}=Astro.props;
+---
+<Page title={post.title}><Header title={post.title} back="/blog"/><img class="detail-image" src={post.image} alt=""/><article class="glass panel prose"><p class="eyebrow">Nota de muestra · Borrador editorial</p><h2>{post.title}</h2><p>{post.body}</p><a class="button" href="/blog">Volver al blog</a></article></Page>

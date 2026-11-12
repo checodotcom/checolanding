@@ -1,0 +1,10 @@
+---
+import Base from './Base.astro';
+import FloatHeader from '../components/FloatHeader.astro';
+import Contact from '../components/Contact.astro';
+import Connect from '../components/Connect.astro';
+import Footer from '../components/Footer.astro';
+interface Props {title?:string}
+const {title}=Astro.props;
+---
+<Base title={title ? `${title} — checodotcom` : 'checodotcom'}><FloatHeader/><main id="main"><slot name="hero"/><div class="column"><slot/><Contact/><slot name="after-contact"/><Connect/><Footer/></div></main></Base>

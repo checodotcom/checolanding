@@ -54,3 +54,6 @@ async function fetchProjects(): Promise<Project[]> {
 // Más reciente primero. Nunca se numeran.
 export const getProjects = async (): Promise<Project[]> =>
   (await fetchProjects()).sort((a, b) => b.year - a.year || b.month - a.month);
+
+// URLs independientes del orden cronológico de los proyectos.
+export const projectSlug = (project: Project): string => project.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");

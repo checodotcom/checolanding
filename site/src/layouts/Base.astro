@@ -54,11 +54,12 @@ const ogImage = new URL("/og.png", Astro.site); // 1200 × 630 (public/og.png)
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Baskervville:ital,wght@0,400;1,400&family=Inter:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Baskervville:ital,wght@0,400;1,400&family=Figtree:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
   </head>
   <body>
+    <a class="skip-link" href="#main">Saltar al contenido</a>
     <slot />
     <script>
       // Muestra cada [data-reveal] cuando entra en pantalla (una sola vez). Si el navegador no

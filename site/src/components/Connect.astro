@@ -1,0 +1,5 @@
+---
+import {getSettings} from '../data/settings';
+const {social}=await getSettings();
+---
+<section class="glass panel connect"><p class="eyebrow">¿Tienes una pregunta o una idea?</p><h2>Platiquemos.</h2><div class="social-links">{social.filter(s=>s.url).map(s=><a href={s.url} target="_blank" rel="me noopener noreferrer">{s.label} ↗</a>)}<a href="/contact">Contacto ↗</a></div></section>

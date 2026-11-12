@@ -1,0 +1,7 @@
+---
+import Page from '../../layouts/PortfolioPage.astro';import Header from '../../components/PageHeader.astro';import {getProjects,formatDate,projectSlug} from '../../data/projects';
+const projects=await getProjects();
+---
+<Page title="Portafolio"><Header title="Portafolio"/>{projects.map((p,i)=><a class="project-cover glass" href={`/projects/${projectSlug(p)}`}>
+{p.image ? <img src={p.image} alt={p.name} loading="lazy"/> : <div class="project-placeholder"><span>{p.type}</span><strong>{p.name}</strong></div>}
+<div class="cover-caption"><div><p class="small">{formatDate(p)}</p><h2>{p.name}</h2></div><span aria-hidden="true">↗</span></div></a>)}</Page>

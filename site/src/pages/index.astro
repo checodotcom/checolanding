@@ -1,20 +1,12 @@
 ---
-import Base from "../layouts/Base.astro";
-import FloatHeader from "../components/FloatHeader.astro";
-import Hero from "../components/Hero.astro";
-import Portfolio from "../components/Portfolio.astro";
-import Contact from "../components/Contact.astro";
-import About from "../components/About.astro";
-import Footer from "../components/Footer.astro";
+import Page from '../layouts/PortfolioPage.astro';
+import Hero from '../components/Hero.astro';
+import Portfolio from '../components/Portfolio.astro';
+import Services from '../components/Services.astro';
+import Approach from '../components/Approach.astro';
+import BlogList from '../components/BlogList.astro';
 ---
-
-<Base>
-  <FloatHeader />
-  <main>
-    <Hero />
-    <Portfolio />
-    <Contact />
-    <About />
-  </main>
-  <Footer />
-</Base>
+<Page><Hero slot="hero"/><Portfolio/>
+<Services/><Approach/><BlogList limit={4}/>
+<section class="glass panel process"><p class="eyebrow">Del concepto al producto</p><p class="process-large">Diseño.<br/>Código.<br/><em>Datos.</em></p><p class="muted">Una misma mirada, de la primera idea a entender cómo funciona.</p></section>
+</Page>

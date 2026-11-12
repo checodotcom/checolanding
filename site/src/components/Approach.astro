@@ -1,0 +1,24 @@
+---
+const items = [
+ ['Interfaces editoriales medidas con datos para asegurarme de que funcionan.','Diseño','Una dirección clara.'],
+ ['Sitios, tiendas y herramientas únicas, diseñados y construidos por checo.','Código','De la idea a la web.'],
+ ['Entender cómo se usa un producto es parte de diseñarlo.','Datos','Observar y mejorar.'],
+];
+---
+<section class="glass panel approach" aria-label="Mi forma de trabajar">
+<p class="approach-quote" aria-live="polite">{items[0][0]}</p>
+<div class="approach-tabs">{items.map(([quote,title,detail],i)=><button aria-label={title} aria-pressed={i===0?'true':'false'} data-quote={quote}><span class="approach-icon" aria-hidden="true">{['✳','⌘','↗'][i]}</span><span class="approach-person"><span class="approach-person-inner">{title}<small>{detail}</small></span></span></button>)}</div>
+</section>
+<script>
+ const quote=document.querySelector<HTMLElement>('.approach-quote')!;
+ const tabs=[...document.querySelectorAll<HTMLButtonElement>('.approach-tabs button')];
+ let timer=0;
+ tabs.forEach(b=>b.addEventListener('click',()=>{
+  if(b.getAttribute('aria-pressed')==='true') return;
+  tabs.forEach(c=>c.setAttribute('aria-pressed',String(b===c)));
+  // El texto se desvanece, cambia y vuelve a aparecer.
+  quote.classList.add('is-out');
+  clearTimeout(timer);
+  timer=window.setTimeout(()=>{quote.textContent=b.dataset.quote!;quote.classList.remove('is-out');},260);
+ }));
+</script>

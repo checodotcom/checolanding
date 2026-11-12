@@ -1,0 +1,7 @@
+---
+import Page from '../../layouts/PortfolioPage.astro';import Header from '../../components/PageHeader.astro';import {getProjects,formatDate,projectSlug} from '../../data/projects';
+export async function getStaticPaths(){return (await getProjects()).map((project,i)=>({params:{id:projectSlug(project)},props:{project}}));}
+const {project:p}=Astro.props;
+---
+<Page title={p.name}><Header title={p.name} back="/projects"/>{p.image && <img class="detail-image" src={p.image} alt={p.name}/>}
+<section class="glass panel prose"><p class="eyebrow">{p.type} · {formatDate(p)}</p><h2>{p.name}</h2><p>{p.desc}</p>{p.url ? <a class="button" href={p.url} target="_blank" rel="noopener noreferrer">Visitar proyecto ↗</a>:<p class="muted">Vista previa del proyecto. Enlace público pendiente.</p>}</section></Page>

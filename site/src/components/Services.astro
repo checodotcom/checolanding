@@ -1,0 +1,29 @@
+---
+const icons = {
+  design: "M4 4h16v16H4ZM4 9h16M9 9v11",
+  code: "m8 7-5 5 5 5M16 7l5 5-5 5M14 4l-4 16",
+  shop: "M5 8h14l-1 12H6ZM9 8V6a3 3 0 0 1 6 0v2",
+  chart: "M4 20V10M10 20V4M16 20v-7M22 20H2",
+};
+const services = [
+ [icons.design,'Diseño web','Interfaces editoriales, claras y fáciles de recorrer. Diseño visual y UX/UI pensados para tu proyecto.'],
+ [icons.code,'Desarrollo','Sitios rápidos y herramientas a medida con Astro, JavaScript, Node y APIs.'],
+ [icons.shop,'Tiendas y contenido','Shopify y Sanity para que tu tienda y tus contenidos sigan creciendo contigo.'],
+ [icons.chart,'Análisis de producto','Medición con PostHog, GA4 y Tag Manager para entender qué funciona y qué necesita mejorar.'],
+];
+---
+<section class="glass panel services"><h2 class="eyebrow">Servicios</h2>
+<div class="service-grid">
+{services.map(([d,title,description])=><div class="service"><button type="button" aria-expanded="false"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={d}/></svg><span class="service-title">{title}</span></button><div class="service-body"><div><p>{description}</p></div></div></div>)}
+</div>
+</section>
+<script>
+ // Con cursor, el texto aparece al pasar encima (CSS). En táctil no hay hover: un toque abre la tarjeta y cierra las demás.
+ const tiles = [...document.querySelectorAll<HTMLElement>('.service')];
+ tiles.forEach(tile=>tile.querySelector('button')!.addEventListener('click',()=>{
+  if(!matchMedia('(hover: none)').matches) return;
+  const open=!tile.classList.contains('is-open');
+  tiles.forEach(t=>{t.classList.remove('is-open');t.querySelector('button')!.setAttribute('aria-expanded','false');});
+  if(open){tile.classList.add('is-open');tile.querySelector('button')!.setAttribute('aria-expanded','true');}
+ }));
+</script>

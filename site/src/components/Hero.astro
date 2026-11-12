@@ -3,7 +3,7 @@
   <nav class="hero-nav" aria-label="Secciones">
     <a href="#portafolio">Portafolio</a>
     <a href="#contact">Contacto</a>
-    <a href="#about">Acerca</a>
+    <a href="/about">Acerca</a>
   </nav>
 </section>
 
@@ -18,4 +18,14 @@
 
   document.fonts.ready.then(() => requestAnimationFrame(() => wordmark?.classList.add("is-ready")));
   Promise.all([loaded, document.fonts.ready]).then(() => setTimeout(() => nav?.classList.add("is-ready"), 1500));
+
+  // Scroll-linked: a medida que las tarjetas suben sobre la primera sección, esta se desenfoca y se apaga.
+  const hero = document.querySelector<HTMLElement>(".hero");
+  const update = () => {
+    const p = Math.min(1, Math.max(0, scrollY / (innerHeight * 0.85)));
+    hero?.style.setProperty("--p", p.toFixed(3));
+  };
+  update();
+  addEventListener("scroll", update, { passive: true });
+  addEventListener("resize", update);
 </script>

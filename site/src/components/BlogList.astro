@@ -1,0 +1,4 @@
+---
+import {posts} from '../data/posts';interface Props {limit?:number}const {limit}=Astro.props;
+---
+<section class="glass panel blog-list"><div class="section-heading"><h2>Blog</h2><span class="small">Notas de muestra</span></div><div class="articles">{posts.slice(0,limit).map(p=><a class="article-row" href={`/blog/${p.slug}`}><img src={p.image} alt="" loading="lazy"/><div><h3>{p.title}</h3><p class="small">Diseño y desarrollo · Lectura breve</p></div></a>)}</div>{limit && <a class="button" href="/blog">Ver todas</a>}</section>

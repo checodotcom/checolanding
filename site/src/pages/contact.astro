@@ -1,0 +1,33 @@
+---
+import Page from '../layouts/PortfolioPage.astro';import Header from '../components/PageHeader.astro';
+---
+<Page title="Contacto"><Header title="Platiquemos."/><section slot="after-contact" class="glass panel faq"><h2 class="eyebrow" aria-label="Preguntas frecuentes">¿?</h2>
+<details><summary>¿Qué tipo de proyectos haces?</summary><p>Diseño y desarrollo sitios, tiendas y herramientas únicas, con una experiencia editorial e intuitiva, y medible en cada punto del recorrido.</p></details>
+<details><summary>¿Cómo empezamos?</summary><p>Escribe tu correo en el campo de contacto y cuéntame qué tienes en mente. Te respondo en un par de días hábiles.</p></details>
+<details><summary>¿Puedo gestionar mi contenido?</summary><p>Sí. Trabajo con distintos gestores de contenido y, si hace falta, construyo uno a la medida, para que edites tú mismo lo que necesites sin depender de nadie.</p></details></section></Page>
+<script>
+ // Preguntas frecuentes: se despliegan y pliegan con animación de altura y fundido del texto.
+ const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+ const OPTS = { duration: 420, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' };
+ document.querySelectorAll<HTMLDetailsElement>('.faq details').forEach((d) => {
+  const summary = d.querySelector('summary')!;
+  const body = d.querySelector('p')!;
+  let anim: Animation | null = null;
+  summary.addEventListener('click', (e) => {
+   e.preventDefault();
+   const opening = !d.open;
+   if (reduce.matches) { d.open = opening; return; }
+   anim?.cancel();
+   const start = d.offsetHeight;
+   if (opening) d.open = true;
+   const end = opening ? summary.offsetHeight + body.offsetHeight + parseFloat(getComputedStyle(body).marginTop) + parseFloat(getComputedStyle(d).paddingTop) + parseFloat(getComputedStyle(d).paddingBottom) : summary.offsetHeight + parseFloat(getComputedStyle(d).paddingTop) + parseFloat(getComputedStyle(d).paddingBottom);
+   d.style.overflow = 'hidden';
+   d.classList.toggle('is-opening', opening);
+   d.classList.toggle('is-closing', !opening);
+   anim = d.animate({ height: [`${start}px`, `${end}px`] }, OPTS);
+   body.animate({ opacity: opening ? [0, 1] : [1, 0], transform: opening ? ['translateY(-6px)', 'none'] : ['none', 'translateY(-6px)'] }, OPTS);
+   anim.onfinish = () => { d.open = opening; d.style.height = d.style.overflow = ''; d.classList.remove('is-opening', 'is-closing'); anim = null; };
+   anim.oncancel = () => { d.style.height = d.style.overflow = ''; };
+  });
+ });
+</script>

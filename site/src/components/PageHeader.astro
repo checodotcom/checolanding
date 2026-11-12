@@ -1,0 +1,5 @@
+---
+interface Props {title:string;back?:string}
+const {title,back='/'}=Astro.props;
+---
+<header class="glass panel page-header"><a class="button back" href={back} aria-label="Volver">←</a><h1>{title}</h1></header>
