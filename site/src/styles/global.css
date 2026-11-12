@@ -582,10 +582,24 @@ h3 {
     background 0.3s,
     color 0.3s;
 }
+.dock a:hover {
+  background: rgba(38, 38, 38, 0.06);
+}
 .dock a:hover,
 .dock a[aria-current="page"] {
   color: var(--ink-strong);
+}
+/* El selector de la página actual es un elemento aparte (::before) para poder deslizarlo entre iconos. */
+.dock a[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
   background: rgba(38, 38, 38, 0.06);
+  z-index: -1;
+}
+.dock a {
+  isolation: isolate;
 }
 .dock a:hover::after {
   content: attr(data-tooltip);
@@ -617,7 +631,7 @@ h3 {
   position: relative;
   overflow: hidden;
   display: block;
-  aspect-ratio: 1;
+  aspect-ratio: 1.618 / 1; /* rectangular, como la captura de escritorio de cada sitio */
 }
 .project-cover > img {
   width: 100%;
@@ -1537,3 +1551,29 @@ body:has(.hero) .dock.is-away { opacity: 0; visibility: hidden; pointer-events: 
 .faq details[open]:not(.is-closing) summary::after { transform: rotate(45deg); }
 .faq details.is-opening summary::after { transform: rotate(45deg); }
 .faq summary:hover { color: var(--ink-strong); }
+
+
+/* Transiciones entre páginas (navegación nativa, sin JS): el dock se queda fijo y el selector recorre el
+   trayecto de un icono al otro con ease; el resto de la página se funde rápido. */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+  .dock {
+    view-transition-name: dock;
+  }
+  .dock a[aria-current="page"]::before {
+    view-transition-name: dock-pill;
+  }
+  ::view-transition-group(dock-pill) {
+    animation-duration: 0.55s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  ::view-transition-group(dock) {
+    animation-duration: 0s;
+  }
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.22s;
+  }
+}

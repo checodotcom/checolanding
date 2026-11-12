@@ -2,9 +2,10 @@
 const skills = [
   ["Diseño", "Web · UX/UI"],
   ["Desarrollo", "Astro · Eleventy · JS · Node · APIs"],
-  ["Contenido", "Sanity · Shopify"],
+  ["CMS", "Sanity · Shopify"],
   ["Infraestructura", "Cloudflare · Git · DNS"],
   ["Medición", "PostHog · GA4 · Tag Manager"],
+  ["Automatización", "GHL · n8n · Make"],
 ];
 
 // El punto medio va pegado a la palabra anterior (espacio sin salto): si el texto se parte, la línea nueva
@@ -14,7 +15,7 @@ const glue = (t: string) => t.replaceAll("Tag Manager", "Tag Manager").replaceA
 
 <section class="section" id="about" aria-labelledby="about-label">
   <div class="two-col" data-reveal>
-    <h2 class="label" id="about-label">03 — Acerca</h2>
+    <h2 class="sr-only" id="about-label">Acerca</h2>
     <div class="col-body">
       <p>Soy Sergio. Hago análisis de producto. Diseño y desarrollo sitios, tiendas y herramientas únicas: interfaces editoriales medidas con datos para asegurarme de que funcionan.</p>
       <p>checodotcom reúne una selección de ese trabajo. Si algo se parece a lo que buscas, escríbeme.</p>
