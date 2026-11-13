@@ -1688,3 +1688,10 @@ body:has(.hero) .dock.is-away { opacity: 0; visibility: hidden; pointer-events: 
 .mode-toggle { color: var(--ink-muted); transition: color 0.3s; }
 .mode-toggle[aria-pressed="true"],
 .mode-toggle:hover { color: var(--ink-strong); }
+
+/* Enfoque: las tres categorías van centradas bajo la frase. */
+.approach-tabs { justify-content: center; }
+
+/* Pie: mismo margen lateral que el resto de las tarjetas (48 px; 32 px en móvil). */
+.credits { padding-left: 48px; padding-right: 48px; }
+@media (max-width: 600px) { .credits { padding-left: 32px; padding-right: 32px; } }

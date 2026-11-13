@@ -4,9 +4,7 @@ import Hero from '../components/Hero.astro';
 import Portfolio from '../components/Portfolio.astro';
 import Services from '../components/Services.astro';
 import Approach from '../components/Approach.astro';
-import BlogList from '../components/BlogList.astro';
 ---
 <Page><Hero slot="hero"/><Portfolio/>
-<Services/><Approach/><BlogList limit={4}/>
-<section class="glass panel process"><p class="eyebrow">Del concepto al producto</p><p class="process-large">Diseño.<br/>Código.<br/><em>Datos.</em></p><p class="muted">Una misma mirada, de la primera idea a entender cómo funciona.</p></section>
+<Services/><Approach/>
 </Page>
