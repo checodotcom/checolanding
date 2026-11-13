@@ -37,6 +37,13 @@ export const project = defineType({
       validation: (r) => r.uri({ scheme: ["http", "https"] }),
     }),
     defineField({
+      name: "demo",
+      title: "Es un demo",
+      description: "Los demos se listan aparte, en la columna «Demos» del portafolio, en lugar de entre los proyectos.",
+      type: "boolean",
+      initialValue: false,
+    }),
+    defineField({
       name: "image",
       title: "Imagen",
       description: "Se muestra en proporción 1.618 : 1; el recorte se ajusta solo.",

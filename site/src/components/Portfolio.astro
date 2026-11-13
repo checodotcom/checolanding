@@ -1,8 +1,10 @@
 ---
 import { formatDate, getProjects } from "../data/projects";
 
-const projects = await getProjects();
-const first = projects[0];
+const all = await getProjects();
+const projects = all.filter((p) => !p.demo);
+const demos = all.filter((p) => p.demo);
+const first = projects[0] ?? all[0];
 
 // "Eleventy, Nunjucks" → ["Eleventy,", "Nunjucks"]: cada tag es una pieza que no se parte; si no caben
 // en una línea, bajan uno debajo del otro (alineados a la derecha). La coma se queda con su tag.
@@ -10,25 +12,61 @@ const tags = (type: string) => {
   const parts = type.split(",").map((t) => t.trim()).filter(Boolean);
   return parts.map((t, i) => (i < parts.length - 1 ? `${t},` : t));
 };
+
+const row = (p: (typeof all)[number], current: boolean) => {
+  const data = {
+    "data-name": p.name,
+    "data-desc": p.desc,
+    "data-url": p.url ?? "",
+    "data-image": p.image ?? "",
+    "data-placeholder": p.placeholder,
+    "aria-current": current ? "true" : undefined,
+    class: "project",
+  };
+  return { data, p };
+};
+const projectRows = projects.map((p, i) => row(p, i === 0));
+const demoRows = demos.map((p) => row(p, false));
+const hasDemos = demos.length > 0;
 ---
 
 <section class="glass panel portfolio" id="portafolio" aria-labelledby="portfolio-label">
-  <div class="portfolio-grid">
-    <div class="portfolio-list">
-      <h2 class="label" id="portfolio-label">Algunos trabajos</h2>
+  <div class="portfolio-grid" data-mode="projects">
+    <div class="portfolio-list" data-list="projects">
+      <h2 class="label" id="portfolio-label">
+        <button type="button" class="mode-toggle" data-mode-target="projects" aria-pressed="true">Algunos trabajos</button>
+      </h2>
       <ul class="projects">
         {
-          projects.map((p, i) => {
-            const data = {
-              "data-name": p.name,
-              "data-desc": p.desc,
-              "data-url": p.url ?? "",
-              "data-image": p.image ?? "",
-              "data-placeholder": p.placeholder,
-              "aria-current": i === 0 ? "true" : undefined,
-              class: "project",
-            };
-            return (
+          projectRows.map(({ data, p }) => (
+            <li>
+              {p.url ? (
+                <a {...data} href={p.url} target="_blank" rel="noopener noreferrer">
+                  <span class="date">{formatDate(p)}</span>
+                  <span class="name">{p.name}</span>
+                  <span class="type">{tags(p.type).map((t) => (<><span class="tag">{t}</span>{" "}</>))}</span>
+                </a>
+              ) : (
+                <button {...data} type="button">
+                  <span class="date">{formatDate(p)}</span>
+                  <span class="name">{p.name}</span>
+                  <span class="type">{tags(p.type).map((t) => (<><span class="tag">{t}</span>{" "}</>))}</span>
+                </button>
+              )}
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    {
+      hasDemos && (
+        <div class="portfolio-list portfolio-list--demos" data-list="demos">
+          <h2 class="label" id="demos-label">
+            <button type="button" class="mode-toggle" data-mode-target="demos" aria-pressed="false">Demos</button>
+          </h2>
+          <ul class="projects">
+            {demoRows.map(({ data, p }) => (
               <li>
                 {p.url ? (
                   <a {...data} href={p.url} target="_blank" rel="noopener noreferrer">
@@ -44,11 +82,11 @@ const tags = (type: string) => {
                   </button>
                 )}
               </li>
-            );
-          })
-        }
-      </ul>
-    </div>
+            ))}
+          </ul>
+        </div>
+      )
+    }
 
     <div class="portfolio-media" aria-live="polite">
       <!-- El enlace de la imagen duplica el del título: se oculta al teclado y a lectores de pantalla. -->
@@ -74,6 +112,7 @@ const tags = (type: string) => {
     </div>
   </div>
 </section>
+
 <script>
   const items = Array.from(document.querySelectorAll<HTMLElement>(".project"));
   const image = document.getElementById("media-image")!;
@@ -153,4 +192,35 @@ const tags = (type: string) => {
       if (link.hasAttribute("href")) window.posthog?.capture("portfolio_project_opened", { source: "preview" });
     }),
   );
+
+  // ——— Proyectos / Demos ———
+  // Dos columnas con el mismo listado. Al elegir «Demos» (hover con cursor, toque o teclado) la cuadrícula se
+  // espeja: la vista previa pasa a la izquierda y la lista de demos queda a la derecha, orientada a la derecha.
+  const grid = document.querySelector<HTMLElement>(".portfolio-grid")!;
+  const toggles = Array.from(document.querySelectorAll<HTMLButtonElement>(".mode-toggle"));
+  let hoverTimer = 0;
+
+  function setMode(mode: "projects" | "demos") {
+    if (grid.dataset.mode === mode) return;
+    grid.dataset.mode = mode;
+    grid.classList.remove("is-switching");
+    void grid.offsetWidth; // reinicia la animación de entrada
+    grid.classList.add("is-switching");
+    toggles.forEach((t) => t.setAttribute("aria-pressed", String(t.dataset.modeTarget === mode)));
+    const list = grid.querySelector(`[data-list="${mode}"]`);
+    list?.querySelector<HTMLElement>(".project")?.dispatchEvent(new CustomEvent("select-project"));
+  }
+
+  const canHover = window.matchMedia("(hover: hover) and (pointer: fine)");
+  toggles.forEach((t) => {
+    const target = t.dataset.modeTarget as "projects" | "demos";
+    t.addEventListener("click", () => setMode(target));
+    t.addEventListener("pointerenter", () => {
+      if (!canHover.matches) return;
+      clearTimeout(hoverTimer);
+      hoverTimer = window.setTimeout(() => setMode(target), 140); // un respiro, para no cambiar por rozar
+    });
+    t.addEventListener("pointerleave", () => clearTimeout(hoverTimer));
+  });
+  items.forEach((el) => el.addEventListener("select-project", () => show(el)));
 </script>

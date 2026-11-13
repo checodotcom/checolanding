@@ -531,7 +531,7 @@ h3 {
   text-align: center;
 }
 .connect h2 {
-  margin: 22px 0 32px;
+  margin: 0 0 32px;
 }
 .social-links {
   display: flex;
@@ -1547,7 +1547,6 @@ body:has(.hero) .dock.is-away { opacity: 0; visibility: hidden; pointer-events: 
 
 /* Contacto: la frase de siempre como titular, a la escala del resto de frases grandes del sitio. */
 .contact-title { font-size: 40px; line-height: 44px; font-weight: 400; letter-spacing: -0.025em; color: var(--ink); max-width: 20em; margin-bottom: 34px; }
-@media (max-width: 600px) { .contact-title { font-size: 28px; line-height: 32px; } }
 
 /* Preguntas frecuentes: marcador propio (+ que gira a ×) en lugar del triángulo del navegador. */
 .faq summary { display: flex; align-items: center; justify-content: space-between; gap: 21px; list-style: none; transition: color 0.3s; }
@@ -1582,3 +1581,110 @@ body:has(.hero) .dock.is-away { opacity: 0; visibility: hidden; pointer-events: 
     animation-duration: 0.22s;
   }
 }
+
+/* Los dos titulares (Contacto y redes) comparten la tipografía de .approach-quote: 40 px / 44 px, -0.025em. */
+.contact-title { font: 400 40px/44px var(--sans); letter-spacing: -0.025em; color: var(--ink); max-width: none; }
+.connect { text-align: left; }
+.connect .social-links { justify-content: flex-start; }
+@media (max-width: 600px) { .contact-title { font-size: 30px; line-height: 1.2; } }
+
+
+/* ——— Proyectos / Demos: la cuadrícula se espeja ——— */
+.portfolio-grid { position: relative; }
+.portfolio-list { grid-column: 1; grid-row: 1; }
+.portfolio-media { grid-column: 2; grid-row: 1; }
+.mode-toggle { display: inline-flex; align-items: center; gap: 8px; font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; }
+.mode-arrow { display: inline-block; opacity: 0; transition: opacity 0.3s, transform 0.3s; }
+.mode-toggle[aria-pressed="true"] .mode-arrow { display: none; }
+.mode-toggle[aria-pressed="false"] { cursor: pointer; color: var(--ink-muted); }
+.mode-toggle[aria-pressed="false"] .mode-arrow { opacity: 0.6; }
+.mode-toggle[aria-pressed="false"]:hover { color: var(--ink-strong); }
+.mode-toggle[aria-pressed="false"]:hover .mode-arrow { opacity: 1; transform: translateX(3px); }
+
+/* Modo proyectos: la columna de demos queda recogida arriba a la derecha (solo su título). */
+.portfolio-grid[data-mode="projects"] .portfolio-list--demos {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0;
+  border: 0;
+  width: auto;
+}
+.portfolio-grid[data-mode="projects"] .portfolio-list--demos .projects { display: none; }
+
+/* Modo demos: vista previa a la izquierda; demos a la derecha, orientados a la derecha. */
+.portfolio-grid[data-mode="demos"] { grid-template-columns: minmax(0, 1.618fr) minmax(0, 1fr); }
+.portfolio-grid[data-mode="demos"] .portfolio-media { grid-column: 1; }
+.portfolio-grid[data-mode="demos"] .portfolio-list--demos {
+  grid-column: 2;
+  padding: 0 0 0 var(--s-34);
+  border-right: 0;
+  border-left: 1px solid var(--line);
+  text-align: right;
+  align-items: flex-end;
+}
+.portfolio-grid[data-mode="demos"] .portfolio-list[data-list="projects"] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 0;
+  border: 0;
+  width: auto;
+}
+.portfolio-grid[data-mode="demos"] .portfolio-list[data-list="projects"] .projects { display: none; }
+.portfolio-grid[data-mode="demos"] .portfolio-list[data-list="projects"] .mode-arrow { display: inline-block; }
+.portfolio-grid[data-mode="demos"] .portfolio-list[data-list="projects"] .mode-toggle { flex-direction: row; }
+
+/* Filas de demos espejadas: etiquetas a la izquierda, fecha y nombre alineados a la derecha. */
+.portfolio-list--demos .projects { width: 100%; }
+.portfolio-list--demos .project { text-align: right; grid-template-columns: minmax(0, max-content) minmax(min-content, 1fr); grid-template-areas: "type date" "type name" "type ."; }
+.portfolio-list--demos .project .date,
+.portfolio-list--demos .project .name { justify-self: end; }
+.portfolio-list--demos .project .type { justify-self: start; text-align: left; }
+@media (min-width: 481px) {
+  @container (min-width: 341px) {
+    .portfolio-list--demos .project { grid-template-columns: minmax(0, max-content) minmax(min-content, 1fr) 116px; grid-template-areas: none; }
+    .portfolio-list--demos .project .type { order: -1; }
+    .portfolio-list--demos .project .date { order: 1; }
+    .portfolio-list--demos .project .name { text-align: right; }
+  }
+}
+
+/* Entrada al cambiar de modo: fundido corto con un pequeño deslizamiento. */
+@keyframes portfolio-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.portfolio-grid.is-switching .projects,
+.portfolio-grid.is-switching .portfolio-media { animation: portfolio-in 0.45s cubic-bezier(0.4, 0, 0.2, 1) both; }
+
+/* Teléfonos y tablets: una sola columna; el modo cambia solo el listado visible (y el título activo). */
+@media (max-width: 900px) {
+  .portfolio-grid[data-mode="projects"] .portfolio-list--demos,
+  .portfolio-grid[data-mode="demos"] .portfolio-list[data-list="projects"] { position: static; }
+  .portfolio-grid[data-mode="demos"] { grid-template-columns: 1fr; }
+  .portfolio-grid[data-mode="demos"] .portfolio-list--demos { grid-column: 1; padding: 0; border-left: 0; }
+  .portfolio-list, .portfolio-media, .portfolio-grid[data-mode="demos"] .portfolio-media { grid-column: 1; grid-row: auto; }
+}
+
+.mode-toggle { padding: 0; border: 0; background: none; box-shadow: none; border-radius: 0; min-height: 0; text-transform: uppercase; white-space: nowrap; }
+.portfolio-grid[data-mode="demos"] .portfolio-media { margin-top: var(--s-55); }
+.portfolio-grid[data-mode="demos"] .portfolio-media { justify-content: flex-start; }
+@media (max-width: 900px) { .portfolio-grid[data-mode="demos"] .portfolio-media { margin-top: 0; } }
+.portfolio-media { margin-top: var(--s-55); } /* deja libre la fila de títulos (Algunos trabajos / Demos) */
+@media (max-width: 900px) { .portfolio-media { margin-top: 0; } }
+
+/* Títulos de modo: el activo va en negritas; el otro, en peso normal. Sin flechas. */
+.mode-arrow { display: none !important; }
+.mode-toggle { font-weight: 500; transition: color 0.3s, font-weight 0.3s; }
+.mode-toggle[aria-pressed="true"] { font-weight: 700; color: var(--ink-strong); }
+
+/* La lista recogida (solo su título) no puede tener contención de tamaño, o mide 0 y el título se sale por la derecha. */
+.portfolio-grid[data-mode="projects"] .portfolio-list--demos,
+.portfolio-grid[data-mode="demos"] .portfolio-list[data-list="projects"] { container-type: normal; width: max-content; }
+.portfolio-grid[data-mode="projects"] .portfolio-list--demos { text-align: right; }
+
+/* Sin negritas: los títulos de modo se comportan como el menú del hero (gris, y más oscuro al pasar el cursor).
+   El modo activo va en el tono oscuro. */
+.mode-toggle,
+.mode-toggle[aria-pressed="true"] { font-weight: 500; }
+.mode-toggle { color: var(--ink-muted); transition: color 0.3s; }
+.mode-toggle[aria-pressed="true"],
+.mode-toggle:hover { color: var(--ink-strong); }
